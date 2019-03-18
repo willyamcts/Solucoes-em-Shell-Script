@@ -197,7 +197,7 @@ unset out content
 
 lastHandFunction() {
 
-#		if [[ $(echo $mainFunction | grep update) && $2 = 1 ]]; then
+		if [[ $(echo $mainFunction | grep Ubiquiti) ]]; then
 		if [ -z $2 ]; then
 
 			echo "NORMAL" #TODO
@@ -252,11 +252,11 @@ startLines=$(wc -l /tmp/list.txt | cut -d" " -f1)
 
 					if (( $? == 0 )); then
 						lastHandFunction "$ip"
-#						tail -n1 $toFILE #EMPRO: Comentado
+#							tail -n1 $toFILE #EMPRO: Comentado
 					fi
 
-#					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
-#					xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
+#						xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
+#						xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
 
 				done
 			done

@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 25/05/2017;
+# Data: 29/05/2017;
 #
 # Descrição: Registra MAC do dispositivo ao selecionar o modelo, para fins de 
 #	teste de bom funcionamento do dispositivo. Funciona em dispositivos 
@@ -31,6 +31,7 @@ esac
 dstFile="testados_$(date +%d-%m)"
 
 
+
 ping -s1 -c2 192.168.1.20 1>&2>/dev/null
 
 if [ $? = 0 ]; then
@@ -38,7 +39,7 @@ if [ $? = 0 ]; then
 	out="$?"
 	printf "%s\t%s\n" "$DEVICE" "$mac" >> "$dstFile"
 
-else	
+else
 
 	ping -s1 -c2 192.168.2.1 1>&2>/dev/null
 
@@ -46,37 +47,41 @@ else
 		mac=$(arp -a 192.168.2.1 | cut -d" " -f4)
 
 		
-		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2 && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
 		out=$(echo $?)
 
-
-		if [[ $? != 0 && $? != 5 ]]; then
-			client=$(sshpass -p MINHASENHA ssh -p7722 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+		if [[ $out != 0 && $out != 5 ]]; then
+			client=$(sshpass -p MINHASENHA ssh -p7722 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2 && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
 			out=$(echo $?)
 
 			if [[ $out != 0 && $out != 5 ]]; then
 				client=$(sshpass -p MINHASENHA ssh -p22 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
 				out=$(echo $?)
 
+
 				if [[ $out != 0 && $out != 5 ]]; then
 					client=$(sshpass -p MINHASENHA ssh -p7722 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
 					out=$(echo $?)
+
 				fi
 			fi
 		fi
 
-		[ -n $client ] && printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "$dstFile" || printf "%s\t%s\t%s\n" "$DEVICE" "$mac" >> "$dstFile"
+	else 
+		clear && printf "\tNenhum dispositivo disponível em 192.168.1.20 e 192.168.2.1\n\n"
+#		[ -n $client ] && printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "$dstFile" || printf "%s\t%s\t%s\n" "$DEVICE" "$mac" >> "$dstFile"
 	fi
 
 fi
 
 
 	if [ $out = 0 ]; then
+		printf "$DEVICE\t$mac\t$client\n" >> "$dstFile"
 		clear && tail -n1 "$dstFile" && (echo; echo)
 	elif [ $out = 5 ]; then
 		clear && printf "\t\t\**** \033[1;31mATENÇÂO:\033[0m Usuário e/ou senha inválido(s) **** \n\n"
 	else
-		clear && printf "\tNenhum dispositivo disponível em 192.168.1.20 e 192.168.2.1\n\n"
+		echo
 	fi
 
 $0
