@@ -79,7 +79,9 @@ i=0
 
 		for (( j=1; j <= 4; i++, j++ )); do
 
-			if [ $(echo $address | cut -d. -f$j) -ge 0 ] && [ $(echo $address | cut -d. -f$j) -lt 256 ]; then
+			octeto=$(echo $address | cut -d. -f$j)
+
+			if [[ -n $octeto ]] || [[ $octeto -ge 0 ]] && [[ $octeto -lt 256 ]]; then
 				addr[$i]=$(echo $address | cut -d. -f$j)
 			else
 				$2				
@@ -227,16 +229,19 @@ handAddressToAccess() {
 
 					ip="$o1.$o2.$o3.$o4"
 
-					ping -s1 -c2 $ip # > /dev/null TODO: Remover sinal de comentario
+					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
+					clear; printf "\n\t%s" "Verificando $ip"
+
+					ping -s1 -c2 $ip 1> /dev/null 2> /dev/null 
 
 					if (( $? == 0 )); then
+						clear; printf "\n\t%s" "Aplicando a $ip"
 						lastHandFunction "$ip"
-					else # TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
-						clear; printf "\n\t%s" "Verificando $ip" 
 					fi
 
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
 #					xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
+
 
 				done
 			done
