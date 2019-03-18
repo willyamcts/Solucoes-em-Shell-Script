@@ -292,8 +292,8 @@ handAddressToAccess() {
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
 
-				clear && printf "\n\n\n\tVerificando faixa $o1.$o2.$o3.0/24 \n\n"
-
+				clear && printf "\n\n\n\tVerificando $o1.$o2.$o3.0/24 \n\n"
+				
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 					ip="$o1.$o2.$o3.$o4"

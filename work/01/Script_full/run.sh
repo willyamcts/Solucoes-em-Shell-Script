@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 20/06/2017;
+# Data: 23/06/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -16,8 +16,7 @@
 #	IP deve estar em uma linha. Está configurado para iniciar sessões 
 #	SSH nas portas 22 e 7722.
 #
-#	* Incluso a opção de aplicar/executar comandos personalizados
-#	aos equipamentos e habilitar/desabilitar serviços como HTTPS, SSH.
+#	* Incluso a opção de habilitar/desabilitar serviços como HTTPS, SSH.
 #
 # Requisitos: Zenity e SSHPass.
 
