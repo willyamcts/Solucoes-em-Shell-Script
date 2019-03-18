@@ -1,0 +1,1 @@
+# solucoes-em-shell-script
