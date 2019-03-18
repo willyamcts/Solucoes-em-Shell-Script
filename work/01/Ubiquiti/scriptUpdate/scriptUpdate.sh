@@ -3,11 +3,14 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 02/12/2016;
+# Data: 12/2016;
 #
 # Descrição: Faz atualização de firmware de dispositivos Ubiquiti 5.8 GHz.
-#	Alterar linha 39, 173, 178.
+#	Alterar linha 43 e arquivo contentMainBlock.part.
 
+
+source contentExecution.part
+source contentMainBlock.part
 
 #	TODO: - esconder saida "nohup";
 #	- Saida do arquivo output, colocar IPs em sequencia, nao em linha
@@ -29,14 +32,16 @@
 blocoPrincipal(){
 
 	# chamada da funcao;
-	excluirArquivos
+	removeFiles
 
 	# chamada da funcao;
-	verificaPacoteSSHPass
+	checkSSHPackage
 
 	# Range de IPs
 #	for ip in 192.168.2.1 ; do
-	for ip in $oct1.$oct2.207.{78..85} ; do
+#	for ip in $oct1.$oct2.$oct3.{10..254} ; do
+	for ip in $oct1.{1..254}.{76..79}.{1..254} ; do
+#	for ip in $oct1.{1..254}.{1..254}.{1..254} ; do
 
 		# chamada da funcao verifica IPs que respondem
 		#	sem retorno em tela;
@@ -44,6 +49,10 @@ blocoPrincipal(){
 
 	done
 
+
+
+#TODO: Teste
+cp /tmp/address_responding1.txt ./add1.txt
 	date=`date +%H:%M" - "%d/%m/%Y`
 	pwd=`pwd`
 	creatingScript $currentVersion > /tmp/.script.sh
@@ -86,103 +95,13 @@ verificaRespostaIP(){
 }
 
 
-# Verifica existencia pacote sshpass, instala-o se necessario.
-verificaPacoteSSHPass(){
-	status=`dpkg --get-selections sshpass | cut -f 7`
-
-	if [ "$status" != "install" ] ;then
-
-		clear
-		echo; echo "Instalando pacote SSHPass..."
-		apt-get update > /dev/null &
-		sleep 5
-
-		# caso ocorra erro na atualizacao dos pacotes,
-		#  finaliza execucao do script;
-		if [ $? != 0 ]; then
-			clear
-			echo "Verifique a conexao com a internet e atualize"
-			echo "	sua lista de pacotes..."
-			exit
-		fi
-
-		apt-get install sshpass -y > /dev/null &
-	fi
-}
-
-
-delArchiveSSH(){
-	# Remove arquivo SSH profile atual;
-	if [ -e ~/.ssh/known_hosts ] ; then
-		rm ~/.ssh/known_hosts
-	fi
-}
-
-
-# Exclui arquivos criados da execução anterior e restrição de acesso SSH
-excluirArquivos(){
-
-	delArchiveSSH
-
-	# Remove arquivo de enderecos;
-	if [ -e /tmp/address_responding.txt ] ; then
-		rm /tmp/address_responding.txt
-	fi
-
-	# Remover arquivo contem os IP e ID das RBs;
-	if [ -e /tmp/log_update.txt ]; then
-		echo >> /tmp/log_update.txt
-		echo "	==== `date +%D" "%H:%M` ====	" >> /tmp/log_update.txt
-	fi
-
-	# Remove script criado;
-	if [ -e /tmp/.script.sh ]; then
-		rm /tmp/.script.sh
-	fi
-}
-
-
 # Comando SSH
 commandSSH(){
-
+echo "Branco"
 	# Necessario passagem do paametro $command - executa no eq.
-	ssh='sshpass -p "$password" ssh "$user"@"$ip" '$command''
-}
-
-
-# Criar arquivo script
-creatingScript() {
-echo "#!/bin/sh"
-
-echo 'size=`du -hsm /tmp/ | awk '\'{print '$1'}''\''`'
-#echo 'size=`du -hsm ./ | cut -f1`'
-
-echo 'if [ $size -ge 2 ]; then'
-echo '	reboot'
-echo '	return 10'
-
-echo 'else'
-
-echo '	fullver=`cat /etc/version | cut -d"v" -f2`'
-
-echo "	if [ "'$fullver'" != $1 ]; then"
-echo '		versao=`cat /etc/version | cut -d'.' -f1`'
-echo "		cd /tmp"
-
-echo '		if [ "$versao" == "XM" ]; then'
-echo "			URL='http://meuftp.com/down.php?id=23'"
-echo '			wget -c $URL'
-echo "			mv /tmp/down.php?id=23 /tmp/v$1.bin"
-
-echo "		else"
-echo "			URL='http://meuftp.com/down.php?id=24'"
-echo '			wget -c $URL'
-echo "			mv /tmp/down.php?id=24 /tmp/v$1.bin"
-echo "		fi"
-
-echo "	ubntbox fwupdate.real -m /tmp/v$1.bin"
-echo "	fi"
-echo "fi"
+#	ssh='sshpass -p "$password" ssh "$user"@"$ip" << EXIT
+#		$comand
+#	EXIT
 
 }
 
@@ -192,17 +111,21 @@ echo "fi"
 
 #TODO: Alterar para Do While e remover as 2 primeiras linhas
 killSession(){
-echo "ping -c3 $ip"
-echo '	out=$?'
-echo '	min=`date +%M`'
-echo '	while [ "$out" = 0 ]; do'
-echo "		ping -c3 $ip"
-echo '		if [ "$?" != 0 ] || [ `date +%M` = $(($min+7)) ]; then'
+echo 'date=`echo \`date +%s\` + '420' | bc`'
+echo '	until [ `date +%s` -eq $date ]; do'
+echo "		ping -c2 $ip"
+
+echo '		if [ $? != 0 ]; then'
 echo "			killall ssh"
-echo "			rm $pwd/nohup.out"
+#echo "			rm $pwd/nohup.out"
 echo "			exit"
+echo "			return 0"
 echo "		fi"
 echo "	done"
+
+echo "	killall ssh"
+#echo "	rm $pwd/nohup.out"
+#echo "	return 0"
 }
 
 
@@ -211,7 +134,8 @@ comandoUpdate(){
 	killSession > /tmp/.process.kill
 	chmod +x /tmp/.process.kill
 # TENTAR CHAMAR SEM NOHUP, PARA EVITAR PROBLEMAS
-	nohup /tmp/.process.kill & > /dev/null
+#	nohup /tmp/.process.kill & > /dev/null
+	/tmp/.process.kill 1 > /dev/null&
 
 	echo; echo
 	sshpass -p "$password" scp -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh "$user"@"$ip":/tmp/script.sh
@@ -220,7 +144,6 @@ comandoUpdate(){
 	# Verfica erro na transferencia via SCP;
 	if [ "$retorno" != 0 ] ; then
 		content="Falha ao enviar script, $retorno"
-		error=1
 
 	else
 		delArchiveSSH
@@ -251,20 +174,18 @@ accessVersion(){
 
 	version=`sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'cat /etc/version | cut -d"v" -f2'`
 	echo "$version"
-sleep 5
+
 #	command='cat /etc/version | cut -d"v" -f2'
 #	version=`commandSSH`
 	echo "$ip	$version" >> /tmp/updates.txt
 }
 
 
-
-rebootDevices(){
-#echo "		Reiniciando $ip" # TODO: Comentar
-
-	sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'reboot'
-
-}
+# Desuso - introduzido verificacao de restos de arquivos no script
+#  enviado ao eq.
+#rebootDevices(){
+#	sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'reboot'
+# }
 
 
 runtime(){
@@ -281,7 +202,8 @@ buildReport() {
 	blocoDeExecucao accessVersion
 
 	# Info eq. fora da versão atual;
-	manualUpdate=`grep -v "$currentVersion" /tmp/address_responding.txt | cut -f1 | wc -l`
+#	manualUpdate=`grep -v "$currentVersion" /tmp/address_responding.txt | cut -f1 | wc -l`
+	manualUpdate=`grep -v "$currentVersion" /tmp/updates.txt | cut -f1 | wc -l`
 
 	if [ -e ./report.out ] ; then
 		echo >> ./report.out
@@ -331,6 +253,8 @@ echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 		archive="/tmp/address_responding.txt"
 		blocoDeExecucao comandoUpdate
 		qtDevices=$qtLinhas
+#TODO: Teste
+cp /tmp/log_update.txt ./log1
 	else
 		echo "		Nenhum IP da faixa especificada está ativo."
 		exit
@@ -338,13 +262,13 @@ echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 
 
 # Tratamento de equipamentos que nao foram atualizados no primeiro
-#  comando inicia aqui!;
+#  comando, inicia aqui!;
 
 
-# TODO: Descomentar >
 # Time 30s
 	for temp in {30..1}; do
-		echo; echo; echo "		Aguarde $temp"s""
+#		echo; echo; echo "	Iniciando segunda tentativa de update, aguarde... $temp"s""
+		echo; echo; echo "			Aguarde... $temp"s""
 		sleep 1; clear
 	done
 
@@ -357,30 +281,26 @@ echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 	fi
 	blocoDeExecucao accessVersion
 
+#TODO: Teste
+cp /tmp/updates.txt ./up1.txt
 
 
 
 #TODO: Teste
 		grep -v "$currentVersion" /tmp/updates.txt | cut -f1 > /tmp/address_responding.txt
+#TODO: Teste
+cp /tmp/updates.txt ./up2.txt
+cp /tmp/address_responding.txt ./add2.txt
 		rm /tmp/updates.txt; sleep 5
 
 	# 2.2 - Se conteudo do arquivo address nao for vazio;
 	if [ -n "`cat /tmp/address_responding.txt`" ]; then
-
-
-# TODO: Verificar necessidade, pois script introduzido no eq. ja tem a funcao;
-		# 2.2.1 - IPs com versao fora da atual > reboot
-		clear; echo "		Reiniciando equipamentos para update posterior..."
-		archive="/tmp/address_responding.txt"
-		blocoDeExecucao rebootDevices
-
 
 		for temp in {90..1}; do
 			clear; echo; echo
 			echo "			Aguarde $temp"s""
 			sleep 1
 		done
-
 
 		# 2.2.2 - Se o arquivo address possuir conteudo ira chamar blockExecution para
 		#  executar bloco commandUpdate;
@@ -389,28 +309,39 @@ echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 			clear; echo "		Iniciando atualizacoes dos $x eq. restantes"
 			archive="/tmp/address_responding.txt"
 			blocoDeExecucao comandoUpdate
+#TODO :Teste
+cp /tmp/log_update.txt ./log2
 		fi
 
 
 		# 2.2.3 - Aguarda 2min ate voltar ultimo equipamento atualizado;
 		for temp in {120..1}; do
 			echo; echo
-			echo "		Aguarde $temp"s" - Gerando relatório"
+			echo "			Gerando relatório, aguarde $temp"s""
 			sleep 1; clear
 		done
 	fi
 
 
+	# Removendo arquivos
+	rm /tmp/.script.sh /tmp/.process.kill;
+
+
 # 2.3 - Verifica a versao dos equipamentos - 2a vez;
-	archive="/tmp/address_responding.txt"
 	if [ -e /tmp/updates.txt ]; then
+# TODO: Teste2
+cp /tmp/updates.txt ./up3
 		rm /tmp/updates.txt
 	fi
 
-echo " VER SAIDA ACCESS VERSION, aparece? "; sleep 5
-# TODO; Ver saida esta aparecendo
-	blocoDeExecucao accessVersion & > /dev/null
+# TODO: Teste2
+cp /tmp/updates.txt ./up4
 
+	archive="/tmp/address_responding.txt"
+	blocoDeExecucao accessVersion #& > /dev/null
+# TODO: Teste2
+cp /tmp/updates.txt ./up5
+echo " Em segundo plano" >> ./up5
 
 # 3 - Gera relatorio e exibe o mesmo
 buildReport

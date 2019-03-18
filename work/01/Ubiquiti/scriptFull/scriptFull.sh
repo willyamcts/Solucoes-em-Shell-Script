@@ -3,39 +3,74 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 02/12/2016;
+# Data: 19/12/2016;
+
+
+source general/chkPackSSHPASS.part
+source general/answerIP.part
 
 
 startingBlock(){
 
-	until [ $answer -lt 5 ]; do
+	until [ $ANSWER -lt 5 ]; do
 
 		clear; echo " "
-		echo "	[ 0 ] Verficar IPs ativos somente;"
-		echo "	[ 1 ] Verificar se a senha está conforme o padrão da rede;"
+		echo "	[ 0 ] Verficar IPs ativos;"
+		echo "	[ 1 ] Verificar usuário e senha, conforme o padrão da rede;"
 		echo "	[ 2 ] Realizar backup em massa;"
 		echo "	[ 3 ] Realizar update em massa;"
 		echo "	[ 4 ] Verificar sinal PTPs;"
 		echo "	[ 5 ] Adicionar Compilance Test em massa;"
-		read -p "Digite a opcao desejada: " answer
+		read -p "Digite a opcao desejada: " ANSWER
 
 	done
 
 
 #currentFunction = Recebe funcao que ira trabalhar
-	if [ "$answer" = 0 ] ; then
+	if [ "$ANSWER" = 0 ] ; then
 		currentFunction=mainBlock
-	elif [ "$answer" = 1 ]
+	elif [ "$ANSWER" = 1 ]
 		currentFunction=commandAccess
-	elif [ "$answer" = 2 ]
+	elif [ "$ANSWER" = 2 ]
 		currentFunction=commandBackup
-	elif [ "$answer" = 3 ]
+	elif [ "$ANSWER" = 3 ]
 #		currentFunction=
-	elif [ "$answer" = 4 ]
+	elif [ "$ANSWER" = 4 ]
 #		currentFunction=
-	elif [ "$answer" = 5 ]
+	elif [ "$ANSWER" = 5 ]
 #		currentFunction=
 	fi
+
+
+
+# Usuario seleciona o modo de execucao, atraves de address list ou tentativa e erro
+	ANSWER2=$( zenity --list --title="Select the option you want to" \
+		--column="Way" --column="Description" \
+			"Address list" "Faz leitura de um arquivo com endereços e realiza função escolhida anteriormente." \
+			"Trial and error" "Endereços que responderem a ICMP, será aplicado a função escolhida anteriormente." )
+
+	if [ $ANSWER2 = "Address list" ]; then
+		FILE=$(zenity --file-selection --title="Select file with address")
+
+	else
+		# ENtrada via teclado do endereco IP ( fun mainBlock)
+		#	* arquivo de destino (fun checksAnswerIP)
+
+		ADDR=$( zenity --forms --title "Enter address IP" \
+		        --text="ASDA" --separator="-" \
+		        --add-entry="Enter the IP initial: " \
+		        --add-entry="Enter the IP final: " )
+ 
+		IP=( `echo $ADDR | cut -d. -f1` `echo $ADDR | cut -d. -f2`
+			`echo $ADDR | cut -d. -f3` `echo $ADDR | cut -d- -f1 | cut -d. -f4` )
+
+		IPF=( `echo $ADDR | cut -d- -f2 | cut -d. -f1` `echo $ADDR | cut -d. -f5`
+			`echo $ADDR | cut -d. -f6` `echo $ADDR | cut -d- -f1 | cut -d. -f7` )
+
+		unset ADDR
+	fi
+
+	unset ANSWER2
 
 }
 
@@ -43,37 +78,47 @@ startingBlock(){
 
 mainBlock(){
 
-	# Chamada funcao, adiciona conteudo correspondente ao log;
+	# Chamada funcao, adiciona funcao executada ao log;
 	contentLog
 
-#	if [ "$answer" = 2 || "$answer" = 3 || "$answer" = 4 || "$answer" = 5 ]
-	if [ "$answer" -ge 2 ]
-	then
+#	if [ "$ANSWER" = 2 || "$ANSWER" = 3 || "$ANSWER" = 4 || "$ANSWER" = 5 ]
+	if [ "$ANSWER" -ge 2 ]; then
 
-		# Chamada funcao, verifica pacote;
-		checkPackageSSHPass
+		# Chamada funcao, verifica pacote SSHPASS;
+		checkSSHPackage
 
 		# Chamada funcao;
-		deleteFilesGeneral
+#		deleteFilesGeneral
 	fi
 
 
-	# Percorre range de IPs
-#	for ip in $oct1.$oct2.{248..254}.{1..254} ; do
-	for ip in $oct1.{76..78}.{248..254}.{1..254} ; do
+	# Range de IPs
+	for ((o1="${oct[0]}"; $o1 <= ${octF[0]}; o1++)); do
 
-		# chamada da funcao verifica IPs ativos,
-			# sem retorno em tela;
-		checksAnswerIP > /dev/null &
+		for ((o2="${oct[1]}"; $o2 <= ${octF[1]}; o2++)); do
 
+			for ((o3="${oct[2]}"; $o3 <= ${octF[2]}; o3++)); do
+
+				for ((o4="${oct[3]}"; $o4 <= ${octF[3]}; o4++)); do
+
+					IP="$o1.$o2.$o3.$o4"
+
+# TODO: Definir arcAddr via teclado
+					 checksAnswerIP $IP $arcAddr > /dev/null &
+
+				done
+			done
+		done
 	done
 
+
+#TODO: Ver tratativa correta - teste
+	unset checksAnswerIP
+
 	# Chama bloco de execucao;
-	if [ "$answer" != 0 ]; then
+	if [ "$ANSWER" != 0 ]; then
 		executionBlock
 	fi
-
-
 }
 
 
@@ -83,35 +128,24 @@ executionBlock(){
 	# quantidade de linhas do arquivo /tmp/addr_responding;
 	qtLines=`wc -l /tmp/addr_responding.txt | cut -d " " -f1`
 
-	# respectivo IP presente na linha;
-	for ((currentLine=1; "$currentLine" <= "$qtLines"; currentLine++)); do
 
+	for ip in `cat $arcAddr`; do 
 
-	# Remove arquivo SSH profile atual;
-	if [ -e ~/.ssh/known_hosts ] ; then
-		rm ~/.ssh/known_hosts
-	fi
-
-		# recebe IP da linha especifica
-		ip=`(sed -n "$currentLine"'p' /tmp/addr_responding.txt)`
-
-		sleep 3
 		# Chama funcao escolhida;
 			$currentFunction
-
 	done
-
 }
 
 
+#TODO: Organizar
 # Conteudo do log, linha a ser adicionada juntamente ao log.txt
 contentLog(){
 
-	if [ "$answer" = 2 ]; then
+	if [ "$ANSWER" = 2 ]; then
 		log_content="IPs com senha fora do padrão"
-	elif [ "$answer" = 4 ]
-		log_content="Realização update"
-	elif [ "$answer" = 5 ]
+	elif [ "$ANSWER" = 4 ]
+		log_content="Update"
+	elif [ "$ANSWER" = 5 ]
 		log_content="Sinais de PTPs"
 	fi
 
@@ -129,32 +163,6 @@ checksAnswerIP(){
 }
 
 
-# Verifica existencia pacote sshpass, instala-o se necessario.
-checkPackageSSHPass(){
-	status=`dpkg --get-selections sshpass | cut -f 7`
-
-	if [ "$status" != "install" ] ;then
-
-		clear
-		echo " "; echo "Instalando pacote SSHPass..."
-		apt-get update > /dev/null &
-		sleep 5
-
-		# caso ocorra erro na atualizacao dos pacotes,
-		#  finaliza execucao do script;
-		if [ $? != 0 ]; then
-			clear
-			echo "Verifique a conexao com a internet e atualize"
-			echo "	sua lista de pacotes..."
-			exit
-		fi
-
-		apt-get install sshpass -y > /dev/null &
-	fi
-}
-
-
-
 # Exclui e particiona arquivos criados da execução anterior
 #	e restrição de acesso SSH
 deleteFilesGeneral(){
@@ -170,7 +178,7 @@ deleteFilesGeneral(){
 	fi
 
 	# Adiciona divisão novas linhas do log;
-	if [ "$answer" != 1 || "$answer" != 3 ] ; then
+	if [ "$ANSWER" != 1 || "$ANSWER" != 3 ] ; then
 		if [ -e /tmp/log.txt ]; then
 			echo " " >> /tmp/log.txt
 			echo "	==== `date +%D" "%H:%M` - $log_content ====	" >> /tmp/log.txt
@@ -233,13 +241,25 @@ read usuario
 echo " "; echo "Informe a senha de acesso aos equipamentos: "
 read -s senha; echo " "
 
-echo " "; echo "Informe o IP: (será considerado /16) "
-read ip
+echo " "; echo "Informe o IP inicial: (será considerado /16) "
+read IP
 
-oct1=`echo $ip | cut -d. -f1`
-oct2=`echo $ip | cut -d. -f2`
-#oct3=`echo $ip | cut -d. -f3`
-#oct4=`echo $ip | cut -d. -f4`
+echo " "; echo "Informe o IP final: "
+#read IPF
+
+
+##############################################################################
+#############################  DEFINICOES  ###################################
+##############################################################################
+
+oct=( $(echo $IP | cut -d. -f1) $(echo $IP | cut -d. -f2) \
+	$(echo $IP | cut -d. -f3) $(echo $IP | cut -d. -f4) )
+
+octF=( $(echo $IPF | cut -d. -f1) $(echo $IPF | cut -d. -f2) \
+	$(echo $IPF | cut -d. -f3) $(echo $IPF | cut -d. -f4) )
+
+
+
 
 sleep 3; clear; echo " "
 echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."

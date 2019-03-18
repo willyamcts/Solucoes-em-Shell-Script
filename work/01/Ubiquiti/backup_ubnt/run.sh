@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 01/04/2017;
+# Data: 06/04/2017;
 #
 # Descrição: Realiza backup de dispositivos Ubiquiti; gera relatório de 
 #	dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
@@ -22,9 +22,9 @@
 
 ### 29/03: Criar função para gerar relatorio, utilizar a função saveFile; ###
 ### 30/03: Resolver função de relatorio e testar com demais funcoes alem da 2;
-### 01/04: Ver como receber o retorno do server nas outras função (alem do report);
-	### Adicionar sinal do cliente e painel ao report
-	### FUNÇÃO REPORTDEVICE FOI MODIFICADA, NÃO ESTÁ RETORNANDO CORRETAMENTE;
+### 03/04: Ver como receber o retorno do server nas outras função (alem do report);
+	### Ao fazer o backup do arquivo do server, alterar o nome do arquivo para $deviceNAME+$IP
+	### Alterar timeout do SSH e estipular limite para execução de lastHand
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
@@ -33,6 +33,8 @@ source ./dialog/dialogs.lxte ./chk/handling.ch
 #sed '/$pass/ s/^$mainFunction/#$mainFunction/'
 
 #sed '/$pass/ s/#$mainFunction/$mainFunction/'
+
+
 
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;

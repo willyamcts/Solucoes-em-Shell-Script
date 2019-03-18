@@ -18,16 +18,16 @@ warningReturn() {
 	# Funcao principal, contendo menu de opcoes;
 selectFunction() {
 
-#option1='Backup MikroTik'
-option1='Backup Ubiquiti'
-option2='Report devices Ubiquiti (Full)'
+option1='Backup MikroTik'
+option2='Backup Ubiquiti'
 option3='Create ComplianceTest massive'
 option4="Endereços ativos"
+option5='Report devices Ubiquiti (Client-Full)'
 
-	FSELECT=$(zenity --width=450 --height=200 \
-		--list --title="TITULO" --text="O que deseja fazer? " \
+	FSELECT=$(zenity --width=450 --height=400 \
+		--list --title="Funções" --text="O que deseja fazer? " \
 			--radiolist --column "Check" --column "Função" \
-				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4")
+				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4" FALSE "$option5")
 
 	warningReturn $?
 
@@ -40,7 +40,7 @@ option4="Endereços ativos"
 selectModeExecution() {
 
 	MOD=$(zenity --width=200 --height=150 \
-		--list --title="TITULO" --text="Selecione o modo de execução:" \
+		--list --title="Modo exec." --text="Selecione o modo de execução:" \
 			--radiolist --column "" --column="Mode" \
 				TRUE "Range de IP" FALSE "Address list")
 
@@ -58,8 +58,8 @@ selectModeExecution() {
 	# Seleciona o arquivo a ser lido por funcoes posteriores;
 selectFile() {
 
-FILE=$(zenity --file-selection --title="Selecione o arquivo que\
-	contenha os enderecos IP")
+FILE=$(zenity --file-selection --title="Selecione o arquivo\
+	contendo os enderecos IP")
 
 	case $? in
 		0) zenity --info --width=275 --height=130 \
@@ -132,7 +132,7 @@ function addressEntry {
 
 	modeFunction=handAddressToAccess
 
-IP=$(zenity --forms --title="Definição da faixa de endereços" \
+IP=$(zenity --forms --title="Defina a range de endereços" --width=320 --height=150 \
 	--text="Informe a range de IP" --separator="," \
 		--add-entry="IP inicial:" \
 		--add-entry="IP final:" )

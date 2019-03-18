@@ -1,0 +1,35 @@
+# Cria arquivo script que sera importado para equipamento;
+creatingScript() {
+echo "#!/bin/sh"
+
+echo 'size=`du -hsm /tmp/ | awk '\'{print '$1'}''\''`'
+#echo 'size=`du -hsm ./ | cut -f1`'
+
+echo 'if [ $size -ge 1 ]; then'
+echo '	reboot'
+echo '	return 10'
+
+echo 'else'
+
+echo '	fullver=`cat /etc/version | cut -d"v" -f2`'
+
+echo "	if [ "'$fullver'" != $1 ]; then"
+echo '		versao=`cat /etc/version | cut -d'.' -f1`'
+echo "		cd /tmp"
+
+echo '		if [ "$versao" == "XM" ]; then'
+echo "			URL='http://meuftp.com/down.php?id=23'"
+echo '			wget -c $URL'
+echo "			mv /tmp/down.php?id=23 /tmp/v$1.bin"
+
+echo "		else"
+echo "			URL='http://meuftp.com/down.php?id=24'"
+echo '			wget -c $URL'
+echo "			mv /tmp/down.php?id=24 /tmp/v$1.bin"
+echo "		fi"
+
+echo "	ubntbox fwupdate.real -m /tmp/v$1.bin"
+echo "	fi"
+echo "fi"
+
+}

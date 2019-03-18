@@ -19,14 +19,14 @@ warningReturn() {
 selectFunction() {
 
 option1='Backup Ubiquiti'
-option2='Report devices Ubiquiti (MAC+Modelo+User)'
-option3="Endereços ativos"
-#option4=
+option2='Report devices Ubiquiti (Full)'
+option3='Create ComplianceTest massive'
+option4="Endereços ativos"
 
 	FSELECT=$(zenity --width=450 --height=200 \
 		--list --title="TITULO" --text="O que deseja fazer? " \
 			--radiolist --column "Check" --column "Função" \
-				TRUE "$option1" FALSE "$option2" FALSE "$option3")
+				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4")
 
 	warningReturn $?
 
@@ -87,7 +87,7 @@ saveFiles() {
 
 	case $? in
 		1) zenity --warning --width=400 --height=100 \
-			--text="\nNenhum arquivo de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			--text="\nNenhum diretório de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
 			dstFILES="~/backup-$(date +%d%m%Y_%H%M)"
 			;;
 	esac

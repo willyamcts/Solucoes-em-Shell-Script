@@ -1,0 +1,30 @@
+#!/bin/bash
+source ./shell/backup_ubnt/chk/handling.ch 
+source ./shell/backup_ubnt/dialog/dialogs.lxte
+
+
+
+#IP=$(zenity --forms --title="Definição da faixa de endereços" \
+#	--text="Informe a range de IP" \
+#		--add-entry="IP inicial:" )
+
+IP="0.1.2.3"
+echo $IP
+
+for (( j=1, i=0; i < 4; i++, j++ )); do
+	addr[$i]=$(echo $IP | cut -d. -f$j)
+done
+
+
+x=$(zenity --width=200 --height=150 \
+		--list --text="Modo de execução" \
+			--radiolist --column "" --column="Mode" \
+				TRUE "Range de IP manual" FALSE "Address list")
+
+verifyModeExec "$x"
+
+
+
+for i in $(cat add); do
+	echo "$i" 		
+done

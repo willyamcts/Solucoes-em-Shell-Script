@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 07/04/2017;
+# Data: 11/04/2017;
 #
 # Descrição: Realiza backup de dispositivos Ubiquiti; gera relatório de 
 #	dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
@@ -17,7 +17,7 @@
 # Requisitos: Zenity e SSHPass.
 
 
-# Adicao de opcoes: incluir em handling e dialogs
+# Adicao de opcoes: handling e dialogs
 
 ### 29/03: Criar função para gerar relatorio, utilizar a função saveFile; ###
 ### 30/03: Resolver função de relatorio e testar com demais funcoes alem da 2;
@@ -28,11 +28,9 @@
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
 
-
 #sed '/$pass/ s/^$mainFunction/#$mainFunction/'
 
 #sed '/$pass/ s/#$mainFunction/$mainFunction/'
-
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
 

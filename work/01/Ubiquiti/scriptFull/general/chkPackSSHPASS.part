@@ -1,0 +1,25 @@
+
+# Verifica existencia pacote sshpass, instala-o se necessario.
+
+checkSSHPackage(){
+	status=`dpkg --get-selections sshpass | cut -f 7`
+
+	if [ "$status" != "install" ] ;then
+
+		clear
+		echo; echo "	Instalando pacote SSHPass..."; sleep 5
+		apt-get update
+
+		# caso ocorra erro na atualizacao dos pacotes,
+		#  finaliza execucao do script;
+		if [ $? != 0 ]; then
+			clear; echo
+			echo -e "	Verifique a conexao com a internet e atualize sua lista de pacotes..."
+			exit 11
+		else
+# Testar gksudo para aplicar comando como root
+			apt-get install sshpass -y > /dev/null &
+		fi
+	fi
+
+}

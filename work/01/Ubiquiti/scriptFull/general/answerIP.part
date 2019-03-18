@@ -1,0 +1,11 @@
+
+# Verifica IPs ativos via ICMP na rede e envia-os ao arquivo definido;
+
+checksAnswerIP(){
+
+	ping -c 2 $1
+	if [ $? = 0 ]; then
+		echo $1 >> $2
+	fi
+
+}

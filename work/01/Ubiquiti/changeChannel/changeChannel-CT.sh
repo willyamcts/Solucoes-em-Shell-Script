@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 18/04/2017 - 15:50;
+# Data: 18/04/2017 - 17:52;
 #
 # Descrição: Faz alteração de canal e/ou habilita Compliance Test em massa.
 #	Os endereços utilizados para uso das funções são inseridos via 
@@ -240,7 +240,9 @@ i=0
 
 		for (( j=1; j <= 4; i++, j++ )); do
 
-			if [ $(echo $address | cut -d. -f$j) -ge 0 ] && [ $(echo $address | cut -d. -f$j) -lt 256 ]; then
+			octeto=$(echo $address | cut -d. -f$j); echo $octeto
+
+			if [[ $octeto -ge 0 ]] && [[ $octeto -lt 256 ]]; then
 				addr[$i]=$(echo $address | cut -d. -f$j)
 			else
 				$2				
@@ -250,7 +252,6 @@ i=0
 
 		address=$(echo $1 | cut -d, -f2)
 	done
-
 
 unset address i x
 }
@@ -350,20 +351,21 @@ handAddressToAccess() {
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
 
-				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
+					for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 						ip="$o1.$o2.$o3.$o4"
 
-						ping -s1 -c2 $ip > /dev/null 
+						clear; printf "\n\t%s" "Verificando $ip"
+
+						ping -s1 -c2 $ip 1> /dev/null 2> /dev/null 
 
 						if (( $? == 0 )); then
 							clear; printf "\n\t%s" "Aplicando a $ip"
 							lastHandFunction "$ip"
-						else
-							clear; printf "\n\t%s" "Verificando $ip"
 						fi
-				done
 
+					
+					done
 			done
 		done
 	done
@@ -414,7 +416,7 @@ OEF
 )
 	out=$(echo $?)
 
-		if [ $out -eq 255 ] || [ $out -eq 1 ]; then
+		if [ $out = 255 ] || [ $out = 1 ]; then
 
 			$(connectSSHp7722 "$1" "$2" "$3" << OEF
 				[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg
@@ -451,6 +453,8 @@ unset out
 #####################################################################
 #####################################################################
 
+checkPackages
+
 selectFunction
 
 selectModeExecution
@@ -460,4 +464,4 @@ saveFileReport
 $modeFunction
 
 clear
-mousepad $toFILE || notepad $toFILE || gedit $toFILE
+mousepad $toFILE || gedit $toFILE || xed $toFILE || notepad $toFILE 

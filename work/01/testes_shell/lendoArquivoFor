@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for i in $(cat ~/Downloads/Backup/IPs_dude_ubnt); do
+	echo $i
+done

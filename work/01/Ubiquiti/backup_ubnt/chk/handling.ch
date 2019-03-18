@@ -6,15 +6,16 @@ source ./command/functions.exe
 
 verifyOption() {
 
-echo $1 #TODO: teste
 	case $1 in
 		"$option1") mainFunction=backupUbiquiti
 			# Utilizar variavel dstFILES que contem o diretorio a ser salvo os backups.
 			dstFILES=$(saveFiles "ARG1")
 			;;
-		"$option2") mainFunction=reportDeviceAndMAC
+		"$option2") mainFunction=deviceFullReport
 			;;
-		"$option3") mainFunction=activeAddress
+		"$option3") mainFunction=massiveCompliance
+			;;
+		"$option4") mainFunction=activeAddress
 			unset handData
 			;;
 	esac
@@ -88,8 +89,6 @@ handData() {
 
 
 makeReport() {
-
-#	saveFileReport
 	
 	if [ -z "$1" ]; then
 		content=$(echo -e "\n ===== LOG: "$FSELECT" ===== $(date +%d.%m.%y-%H:%M) === \n\n")
@@ -102,6 +101,8 @@ makeReport() {
 				;;
 			5) out='Usuário e/ou senha inválido'
 				;;
+			10) out='Modificação já existe no dispositivo'
+				;;
 			255) out='Inalcançável/Conexão recusada'
 				;;
 			default) out="Error code $2"
@@ -110,19 +111,18 @@ makeReport() {
 		
 		case $FSELECT in
 			"$option1") content=$(printf "%s\t%s" "$1" "$out")
-				;;
-			"$option2") 
-#echo "LINHA 115: Entrou no case makeReport:"
-echo "LINHA 116: FSELECT = $FSELECT e out = $out" #TODO: teste
+					;;
 
+			"$option2")
 					if [ "$2" = 0 ]; then
-						content=$(printf "%s\t%s\t%s" "$3" "$4" "$5")
+						content=$(printf "%s\t%s\t%s\t%s\t%s" "$3" "$4" "$5" "$6" "$7")
 					else
 						content=$(printf "%s\t%s" "$1" "$out")
 					fi
-				;;
+					;;
+
 			"$option3") content=$(printf "%s %s" "$1" "$out")
-				;;
+					;;
 		esac
 
 	fi
@@ -137,32 +137,29 @@ unset out content
 
 lastHandFunction() {
 
-		if [ "$mainFunction" == "reportDeviceAndMAC" ]; then
+		if [ "$mainFunction" == "deviceFullReport" ]; then
 
-			value=$(reportDeviceAndMAC "$user" "$pass" "$ip" "ARG1")
+			value=$(deviceFullReport "$user" "$pass" "$ip" "ARG1")
 			
 			if [ -z "$(echo $value | cut -d+ -f1)" ]; then
-#				echo "LINHA 148: vazio" #TODO: teste
+#				echo "LINHA 148: VALUE, retorno vazio" #TODO: teste
 				return=$(echo $value | cut -d+ -f2)
 			else
 
 				device=$(echo "$value" | cut -d+ -f1)
 				mac=$(echo "$value" | cut -d+ -f2)
 				client=$(echo "$value" | cut -d+ -f3)
-#				ssid=$(echo "$value" | cut -d+ -f4)
-#				signal=$(echo "$value" | cut -d+ -f5)
-				return=$(echo $value | cut -d+ -f4)
-#				return=$(echo "$value" | cut -d+ -f6)
+				ssid=$(echo "$value" | cut -d+ -f4)
+				signal=$(echo "$value" | cut -d+ -f5)
+				return=$(echo "$value" | cut -d+ -f6)
 
 			fi
 
-echo "LINHA 152: VALUE =$value" #TODO: teste
-echo "LINHA 153: DEV = $device, MAC = $mac, CLIENT = $client" #TODO: teste
-echo "LINHA 155: f4 = $return" #TODO: teste
+echo "LINHA 159: VALUE =$value" #TODO: teste
+#echo "LINHA 153: DEV = $device, MAC = $mac, CLIENT = $client" #TODO: teste
+echo "LINHA 155: f4=$ssid f5=$signal f6=$return" #TODO: teste
 
-
-			makeReport "$ip" "$return" "$device" "$mac" "$client" #TODO: Rever
-#			makeReport "$ip" "$return" "$device" "$mac" "$client" "$ssid" "$signal" #TODO: Rever
+			makeReport "$ip" "$return" "$device" "$mac" "$client" "$ssid" "$signal" #TODO: Rever
 
 		elif [ $(echo $mainFunction | grep backup) ]; then
 echo "LINHA 166: Iniciando com BACKUP" #TODO: Teste
@@ -173,10 +170,8 @@ echo "LINHA 168: RETURN=$return" #TODO: Teste
 			makeReport "$ip" "$return"
 
 		else
-			$mainFunction "$user" "$pass" "$ip"
-echo "LINHA 173: Retorno da funcao de execucao: $?" #TODO: Teste
-
-			makeReport "$ip" "$?"
+			return=$($mainFunction "$user" "$pass" "$ip" "ARG1")
+			makeReport "$ip" "$return"
 		fi
 
 unset value
@@ -199,10 +194,10 @@ handAddressToAccess() {
 
 					ip="$o1.$o2.$o3.$o4"
 
-					ping -c2 $ip
+					ping -s1 -c2 $ip # > /dev/null TODO: Remover sinal de comentario
 
 					if (( $? == 0 )); then
-#echo "LINHA 183: $ip" #TODO: teste
+#echo "LINHA 183: $ip - Chamando lastHandling" #TODO
 						lastHandFunction
 					fi
 
