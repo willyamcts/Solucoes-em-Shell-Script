@@ -2,13 +2,9 @@
 
 # Name: Willyam Castro
 # 
-# Date: 31/05/2017
+# Date: 30/05/2017
 #
-# Descryption: Convert word in MD5; Crypt and decrypt files with openssl in aes 256 key
-#
-#
-# Encript: openssl enc -aes-256-cbc -in [file] -out [dst.file.encripted]
-# Decript: openssl enc -aes-256-cbc -d -in [file] > [file.destination]
+# Descryption: Convert word in MD5; Crypt and decrypt files with openssl in aes 256 key;
 
 clear
 
@@ -42,28 +38,15 @@ case $ANSWER in
 				read -p "  Full Path dir/archive for crypt: " Path
 
 				if [ -d "$Path" ]; then
-
-				# Manipula a entrada do usuario, verificando se o caminho completo
-				#	possui / no fim;
-
-					numberDirs=$(echo "$Path" | grep -o "/" | wc -l)
-
-						if [ -z $(echo $Path | cut -d"/" -f$(($numberDirs+1)) ) ]; then
-							cd $(echo $Path | cut -d/ -f-$(($numberDirs-1)) )
-							Path=$(echo $Path | cut -d/ -f$numberDirs)
-
-						else
-							cd $(echo $Path | cut -d/ -f-$((numberDirs)) )
-							Path=$(echo $Path | cut -d/ -f$((numberDirs+1)) )
-						fi
-					unset numberDirs
+							cd $(dirname $Path)
+							Path=$(basename $Path)
 
 					zip -rT $Path.zip $Path
 
 						if [ $? = 0 ]; then
-							outPath="$Path.czip"
+							output="$Path.czip"
 							Path="$Path.zip"
-							openssl enc -aes-256-cbc -in $Path -out $outPath && rm $Path
+							openssl enc -aes-256-cbc -in $Path -out $output && rm $Path
 
 						else					
 							echo -e "\033[1;31m	Erro ao encriptar $Path \033[0m"
@@ -78,7 +61,7 @@ case $ANSWER in
 			# Decrypt;
 			1)
 				echo
-				echo -e "\033[1;32m Full Path file encrypted: \033[0m "
+				echo -en "\033[1;32m Full Path file encrypted: \033[0m "
 				read Path
 
 				# $OUTPUT vazio;
