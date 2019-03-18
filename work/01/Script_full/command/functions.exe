@@ -246,35 +246,63 @@ echo "#!/bin/sh
 
 changeUserPwd() {
 
-# ERRO: Nao esta jogando o conteudo de passwd em system.cfg;
-
 	$(connectSSHp22 "$1" "$2" "$3" << OEF
 		(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
 
 		/bin/sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
 		/bin/sed -i '/users.1.password/d' /tmp/system.cfg
-		echo "users.1.password=$(head -n1 /etc/passwd | cut -d: -f2)" >> /tmp/system.cfg
+		echo "users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`" >> /tmp/system.cfg
+		cfgmtd -w -p /etc/ && reboot
 
 OEF
 )
-
-		#/bin/sed -i "s/users.1.password=.*/users.1.password=`head -n1 /etc/passwd | cut -d: -f2`/" /tmp/system.cfg
-		#/bin/sed -i '/users.1.password/d' /tmp/system.cfg; echo "users.1.password=$CP" >> /tmp/system.cfg
-		#cfgmtd -w -p /etc/ && reboot
-
-
-
 	out=$(echo $?)
 
 	if [[ $out = 1 || $out = 255 ]]; then
 		$(connectSSHp7722 "$1" "$2" "$3" << OEF
-(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
-sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
-sed -i "s/users.1.password=.*/users.1.password="$(cat /etc/passwd | cut -d: -f2)"/" /tmp/system.cfg
-cfgmtd -w -p /etc/ && reboot
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
+			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
+			cfgmtd -w -p /etc/ && reboot
 OEF
 )
+	out=$(echo $?)
+
 	fi
+
+
+	if [[ $out = 1 || $out = 255 ]]; then
+		sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' -o 'ServerAliveInterval=10' \
+			-o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+				-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" << OEF
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
+			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
+			cfgmtd -w -p /etc/ && reboot
+OEF
+
+		out=$(echo $?)
+
+
+		if [ $out != 0 ]; then
+			sshpass -p "$2" ssh -p7722 -o 'ServerAliveCountMax=2' \
+				-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+						-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" << OEF
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
+			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
+			cfgmtd -w -p /etc/ && reboot
+OEF
+
+			out=$(echo $?)
+
+		fi
+	fi
+
+
 
 	echo $out
 unset out
@@ -329,64 +357,5 @@ removeLinesDuplicate() {
 echo "Remover linhas duplicadas - ARG1:$1, ARG2:$2"
 
 }
-
-
-
-updateUbiquiti() {
-
-	cat /tmp/.script.sh | $(connectSSHp22 "$1" "$2" "$3" \
-		'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh')
-
-	out=$(echo $?)
-
-	if [[ $out = 1 || $out = 255 ]]; then
-		cat /tmp/.script.sh | $(connectSSHp7722 "$1" "$2" "$3" \
-			'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh')
-
-		out=$(echo $?)
-	fi
-
-	echo $out
-}
-
-scriptUpdateUbiquiti() {
-# Caso o diretorio /tmp/ do equipamento seja maior que 100k vai reinicia-lo
-# Cria arquivo script que sera importado para equipamento;
-echo "#!/bin/sh
-#	rm -f "'$0'"
-
-	size="'`du -hsk /tmp/ | awk '\'{print '$1'}''\''`'"
-	size="'`du -hsm ./ | cut -f1`'"
-
-	if [ \"\$size\" -gt 100 ]; then
-		reboot
-		return 10
-	else
-		build="'`cat /etc/version | cut -d"v" -f2`'"
-
-		if [ \"\$build\" != "$1" ]; then
-			version="'`cat /etc/version | cut -d'.' -f1`'"
-			cd /tmp
-
-# Versao 6.0.3
-			if [ \"\$version\" == \"XM\" ]; then
-#				URL='http://meuftp.com/down.php?id=27'
-				URL="$2"
-				wget -c "'$URL'" && mv /tmp/down.php?id=27 /tmp/v$1.bin
-
-			else
-#				URL='http://meuftp.com/down.php?id=28'
-				URL="$3"
-				wget -c "'$URL'" && mv /tmp/down.php?id=28 /tmp/v$1.bin
-			fi
-
-			ubntbox fwupdate.real -m /tmp/v$1.bin
-			exit 0
-		fi
-	fi" > /tmp/.script.sh
-
-
-}
-
 
 

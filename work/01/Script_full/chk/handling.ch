@@ -49,9 +49,6 @@ verifyOption() {
 			;;
 		"$option7") mainFunction=deviceFullReport
 			;;
-		"$option8") mainFunction=updateUbiquiti
-			currentVersion
-			;;
 	esac
 }
 
@@ -196,12 +193,6 @@ makeReport() {
 					fi
 					;;
 
-			"$option8")
-					if [ "$2" = 0 ]; then
-						((devices++))
-					fi
-					;;
-
 			*) content=$(printf "%s\t%s" "$1" "$out")
 					;;
 		esac
@@ -253,10 +244,6 @@ lastHandFunction() {
 			return=$($mainFunction "$user" "$pass" "$1" "$newUser" "$newPwd" "ARG1")
 			makeReport "$1" "$return"
 
-#		elif [ $(echo $mainFunction | grep updateUbiquiti) ]; then
-#			
-#
-#
 		else
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
 			makeReport "$1" "$return"
