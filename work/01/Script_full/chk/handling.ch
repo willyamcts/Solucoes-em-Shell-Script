@@ -1,5 +1,4 @@
-source ./command/functions.exe 
-
+source ./command/functions.exe
 
 # Contem funcoes para manipular informacoes;
 
@@ -19,7 +18,6 @@ verifyOption() {
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
-			createScChannels "$channels"
 			;;
 		"$option4") mainFunction=massiveCompliance
 			;;
@@ -136,14 +134,14 @@ makeReport() {
 					fi
 					;;
 
-			*) content=$(printf "%s\t%s" "$1" "$out")
+			*) content=$(printf "%s\t -- %s" "$1" "$out")
 					;;
 		esac
 
 	fi
 
 echo "LINHA 133: CONTENT = $content" #TODO: teste
-	printf "%s\n" "$content" >> $toFILE
+	printf "%s" "$content" >> $toFILE
 
 unset out content
 }
@@ -206,7 +204,7 @@ handAddressToAccess() {
 		for ((o2="${addr[1]}"; $o2 <= ${addr[5]}; o2++)); do
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
-
+			
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 					ip="$o1.$o2.$o3.$o4"

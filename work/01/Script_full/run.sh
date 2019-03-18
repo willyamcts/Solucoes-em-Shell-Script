@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 17/04/2017 - 14:16;
+# Data: 17/04/2017 - 18:04;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
