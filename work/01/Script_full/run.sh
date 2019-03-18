@@ -3,30 +3,31 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 28/04/2017 - 13:47;
+# Data: 02/05/2017;
 #
-# Descrição: Pode realizar backup de dispositivos MikroTik e Ubiquiti; 
-#	altera credenciais de dispositivos Ubiquiti; gera relatório de 
-#	dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
-#	PPPOE, AP conectado e seu respectivo sinal; adiciona Compliance 
-#	Test e habilita-o em massa, bem como altera canais para enlace em AP 
-#	em massa; também é possível verificar dispositivos respondentes a 
-#	ICMP. Os endereços utilizados para uso das funções são inseridos via 
-#	interface (zenity) ou de um arquivo, onde cada IP deve estar em uma 
-#	linha. Está configurado para iniciar sessões SSH nas portas 22 e 
-#	7722. Aplicável a dispositivos atuando em 2.4 GHz e 5.8 GHz.
+# Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
+#	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
+#	MAC, usuário PPPOE, AP conectado e seu respectivo sinal; ativação 
+#	de Compliance Teste, altera de canal(is) de atuação, atualiza 
+#	dispositivos Ubiquiti e altera as credenciais em massa; também é 
+#	possível verificar dispositivos respondentes a ICMP. Os endereços 
+#	utilizados para uso das funções são inseridos via interface 
+#	(zenity) ou de um arquivo, onde cada IP deve estar em uma linha. 
+#	Está configurado para iniciar sessões SSH nas portas 
+#	22 e 7722.
 #
 # Requisitos: Zenity e SSHPass.
 
 
 # Adicao de opcoes: handling e dialogs
 
-# 17/04: Mesmo dia 15 + adaptação CT (Somente adicionar CT ou também 
-#	setar CT;
-# 19/04: Acrescentar tempo de execução no relatório;
+# Adaptação CT (Somente adicionar CT ou também setar CT;
+# Acrescentar tempo de execução no relatório - ao fim, alterar
+#  linha com sed;
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
+
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
 

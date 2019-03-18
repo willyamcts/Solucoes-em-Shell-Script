@@ -35,7 +35,7 @@ verifyOption() {
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
-#			createScChannels "$channels"
+#			createScChannels "$channels" #Desnecessario pois e criado na funcao 
 			;;
 		"$option4") mainFunction=changeUserPwd
 			handData entryNewData 1 "ARG1"
@@ -48,6 +48,9 @@ verifyOption() {
 			unset handData
 			;;
 		"$option7") mainFunction=deviceFullReport
+			;;
+		"$option8") mainFunction=updateUbiquiti
+			currentVersion
 			;;
 	esac
 }
@@ -193,6 +196,12 @@ makeReport() {
 					fi
 					;;
 
+			"$option8")
+					if [ "$2" = 0 ]; then
+						((devices++))
+					fi
+					;;
+
 			*) content=$(printf "%s\t%s" "$1" "$out")
 					;;
 		esac
@@ -241,11 +250,13 @@ lastHandFunction() {
 			makeReport "$1" "$return"
 
 		elif [ $(echo $mainFunction | grep changeUserPwd) ]; then
-
 			return=$($mainFunction "$user" "$pass" "$1" "$newUser" "$newPwd" "ARG1")
 			makeReport "$1" "$return"
 
-
+#		elif [ $(echo $mainFunction | grep updateUbiquiti) ]; then
+#			
+#
+#
 		else
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
 			makeReport "$1" "$return"
@@ -258,7 +269,7 @@ unset value
 
 handAddressToAccess() {
 	makeReport
-	clear; printf "\n\n Arquivo de log:\n"
+#	clear; printf "\n\n Arquivo de log:\n"
 
 	for ((o1="${addr[0]}"; $o1 <= ${addr[4]}; o1++)); do
 
