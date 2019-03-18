@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 25/04/2017 - 18:54;
+# Data: 26/04/2017 - 11:54;
 #
 # Descrição: Pode realizar backup de dispositivos MikroTik e Ubiquiti; 
 #	altera credenciais de dispositivos Ubiquiti; gera relatório de 
@@ -14,7 +14,7 @@
 #	ICMP. Os endereços utilizados para uso das funções são inseridos via 
 #	interface (zenity) ou de um arquivo, onde cada IP deve estar em uma 
 #	linha. Está configurado para iniciar sessões SSH nas portas 22 e 
-#	7722. Aplicável somente a AirOS atuando em 5.8 GHz.
+#	7722. Aplicável a dispositivos atuando em 2.4 GHz e 5.8 GHz.
 #
 # Requisitos: Zenity e SSHPass.
 
