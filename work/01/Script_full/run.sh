@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 26/04/2017 - 11:54;
+# Data: 28/04/2017 - 13:47;
 #
 # Descrição: Pode realizar backup de dispositivos MikroTik e Ubiquiti; 
 #	altera credenciais de dispositivos Ubiquiti; gera relatório de 
@@ -17,6 +17,13 @@
 #	7722. Aplicável a dispositivos atuando em 2.4 GHz e 5.8 GHz.
 #
 # Requisitos: Zenity e SSHPass.
+
+
+# Adicao de opcoes: handling e dialogs
+
+# 17/04: Mesmo dia 15 + adaptação CT (Somente adicionar CT ou também 
+#	setar CT;
+# 19/04: Acrescentar tempo de execução no relatório;
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch

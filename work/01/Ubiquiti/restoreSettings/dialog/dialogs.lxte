@@ -1,0 +1,146 @@
+source ./chk/handling.ch
+
+# Contem somente as caixas de dialogo com as informacoes necessarias;
+
+
+	# Verifica retorno de erro zenity;
+warningReturn() {
+
+	case $1 in
+		1 | default) zenity --error --width=200 --height=100 \
+				--text="\nEntrada inválida/vazia."
+			kill -9 $$
+			;;
+	esac
+}
+
+
+	# Funcao principal, contendo menu de opcoes;
+infoUsage() {
+
+#TODO: Execução sempre as 19 - verificar se o horário da máquina é 24hrs ou de 12hrs em 12.
+	zenity --question --title="Função da execução" --width=500 --height=200 \
+		--text="O backup dos equipamentos Ubiquiti serão feitos todos os dias, iniciando as 19:00hrs. A cada execução será mantido somente o último arquivo de backup. \n\nA função principal do script é detectar algum dispositivo Ubiquiti com as configurações de fábrica e restaurar o último backup existente.\n\n Deseja prosseguir?"
+		
+	warningReturn $?
+
+	infoPID
+
+}
+
+
+infoPID() {
+
+	zenity --info --title="Parar a execução" --width=200 height=100 \
+		--text="Caso queira parar a execução: \n\n\tEncerre o processo $$"
+
+	warningReturn $?
+
+}
+
+
+	# Seleciona o modo de execucao, por address list ou range de IP;
+selectModeExecution() {
+
+	MOD=$(zenity --width=200 --height=150 \
+		--list --title="Modo exec." --text="Selecione o modo de execução:" \
+			--radiolist --column "" --column="Mode" \
+				TRUE "Range de IP" FALSE "Address list")
+
+	warningReturn $?
+
+	verifyModeExec "$MOD" "addressEntry" "selectFile" 
+
+	# Chamada de funcao handling para executar dataAccess
+	handData "dataAccess" 0
+
+}
+
+
+#TODO: Rever a necessidade do case;
+	# Seleciona o arquivo a ser lido por funcoes posteriores;
+selectFile() {
+
+FILE=$(zenity --file-selection --title="Selecione o arquivo\
+	contendo os enderecos IP")
+
+	case $? in
+		0) zenity --info --width=275 --height=130 \
+				--text="\nArquivo selecionado: \n\n $FILE\n"
+			modeFunction='handFileToAccess "$FILE"'
+			;;
+
+		1) zenity --warning \
+				--text="\nNenhum arquivo selecionado."
+			exit 10
+			;;
+
+		-1) zenity --error \
+			--text="\nOcorreu algum erro. Reexecute a aplicaçao"
+			$0
+			;;
+	esac
+}
+
+
+
+saveFiles() {
+
+	dstFILES=$(zenity --file-selection --directory \
+		--title="Salvar arquivos de backup em: ")
+
+	case $? in
+		1) zenity --warning --width=400 --height=100 \
+			--text="\nNenhum diretório de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			dstFILES="~/backup-$(date +%d%m%Y_%H%M)"
+			;;
+	esac
+
+echo "$dstFILES"
+unset dstFILES
+}
+
+
+	# Seleciona/cria um arquivo para salvar um relatorio;
+saveFileReport() {
+
+	toFILE=$(zenity --file-selection --filename=/tmp/log.txt --save --confirm-overwrite \
+		--title="Salvar relatorio de saida em: ")
+
+	case $? in
+		1) zenity --warning --width=400 --height=100 \
+			--text="\nNenhum arquivo de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			toFILE='/tmp/log.txt'
+			;;
+	esac
+}
+
+
+
+	# Recebe os dados de acesso ao equipamento;
+dataAccess() {
+	UaP=$(zenity --title="Usuário e senha dos dispositivos" \
+		--password --username)
+
+	warningReturn $?
+
+	echo $(echo $UaP | cut -d'|' -f1)+$(echo $UaP | cut -d'|' -f2)
+	unset UaP
+}
+
+
+
+	# Recebe endereco IP inicial e final
+addressEntry() {
+
+	modeFunction=handAddressToAccess
+
+IP=$(zenity --forms --title="Defina a range de endereços" --width=320 --height=150 \
+	--text="Informe a range de IP" --separator="," \
+		--add-entry="IP inicial:" \
+		--add-entry="IP final:" )
+
+	warningReturn $?
+
+	checkOcteto "$IP" "addressEntry"
+}
