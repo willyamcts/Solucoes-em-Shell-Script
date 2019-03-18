@@ -3,46 +3,64 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: Dezembro 2016;
+# Data: 14:05 - 15/12/2016;
 #
 # Descrição: Remove virus MF.tar criado para dispostivos Ubiquiti.
 #	Ativa a porta 443 e altera a porta de acesso HTTP para 80 
 #	novamente e troca a SSH para 7722.
 #
-#	Obs.: Adicionado uma segunda porta para tentativa de SSH
-#
 
-# Erros: Nenhum identificado
-# Incrementado: Removido funcoes inuteis, cada IP ativo ja executa funcao
-#		sem necessidade de ler um arquivo;
+
+# 	Erros: 
+#		- Algumas sessoes SSH podem travar, esse erro não foi tratado;
+#
+# 	Incrementado: 
+#		- Removido funcoes inuteis, cada IP ativo ja executa funcao
+#		   sem necessidade de ler um arquivo;
+#		- Trata erro de porta e/ou de autenticacao;
+#		- Gerando log de facil compreensao e informacoes uteis;
 
 
 source contentExecution.part
-#source contentMainBlock.part
+#source scriptExport/removScript.sh #Utilizado mesmo sem realizar declaracao
 
 # Variaveis para facilitar a manipulacao;
 arcScript='/tmp/.scriptRem.sh'
 arcReport='/tmp/report.out'
 
-# Chamada de blocos essenciais para execução.
-blocoPrincipal(){
+initialDate=`date +%s`
 
-	# chamada da funcao;
+# Chamada de blocos essenciais para execução.
+mainBlock(){
 	checkSSHPackage
 
-	cat contentMainBlock.part > $arcScript
+	if [ $? = 11 ]; then
+		kill -9 $$
+		exit
+	fi
+
+	cat scriptExport/removScript.sh > $arcScript
 
 
 	# Range de IPs
-	for IP in 10.79.{42..42}.{97..97}; do
-		x=`echo $IP | cut -d. -f3`;
+	for ((o1="$oct1"; $o1 <= ${octF[0]}; o1++)); do
 
-			clear; echo "		Verificando faixa [ `echo $IP | cut -d. -f3`.0/24 ]"
+		for ((o2="$oct2"; $o2 <= ${octF[1]}; o2++)); do
 
-			# chamada da funcao verifica IPs que respondem
-#			verificaRespostaIP 1> /dev/null &
-echo "			A $IP"
-			verificaRespostaIP
+			for ((o3="$oct3"; $o3 <= ${octF[2]}; o3++)); do
+				clear; echo -e "		Verificando faixa [ $o1.$o2.$o3.0/24 ]\n\n"
+
+
+				for ((o4="$oct4"; $o4 <= ${octF[3]}; o4++)); do
+					IP="$o1.$o2.$o3.$o4"					
+
+					# chamada da funcao verifica IPs que respondem
+					verificaRespostaIP $IP > /dev/null &
+
+				done
+			sleep 10
+			done
+		done
 	done
 }
 
@@ -50,36 +68,27 @@ echo "			A $IP"
 # Verifica IPs ativos na rede e envia-os ao arquivo /tmp/address_responding.txt
 #	 via ICMP, 2 pacotes somente.
 verificaRespostaIP(){
-
 	# Nao executar em segundo plano; funcao e chamada antes de verificar resposta IP
-	ping -c2 $IP > /dev/null
+	ping -c2 $IP #> /dev/null
 	if [ $? = 0 ]; then
 		motherFuckerRemove
 	fi
 }
 
 
-# Finaliza processo SSH local apos 5min da sessao iniciada ou ate equipamento
-#	deixar de responder.
-killSession(){
-echo 'date=`echo \`date +%s\` + '40' | bc`'
-echo '	until [ `date +%s` -eq $date ]; do'
-echo "		ping -c2 $IP"
+# Check error equal 5 or other;
+checkUserAndOrPass() {
 
-echo '		if [ $? != 0 ]; then'
-echo "			killall ssh"
-#echo "			rm $pwd/nohup.out"
-echo "			exit"
-echo "			return 0"
-echo "		fi"
+	if [ $retorno = 5 ]; then
+		content="$IP:$PORTSSH - ERROR User and/or Password"
+	else
+		content="$USER $IP:$PORTSSH	$retorno"
+	fi
 
-echo '		kill -9 `pidof ssh`'
-#echo "			killall ssh"
-echo "	done"
 }
 
 
-# 1- Bloco execução, envia script e o executa no equipamento.
+# Export and run script from IP;
 motherFuckerRemove(){
 # TODO: Tratar tempo, finalizando ssh depois de ter fechado a sessao
 #	killSession > /tmp/.process.kill
@@ -87,52 +96,71 @@ motherFuckerRemove(){
 #	/tmp/.process.kill 1 > /dev/null&
 
 	echo; echo
-#$USER - Porta SSH
-	sshpass -p $PASSWORD scp -P $PORTSSH -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $arcScript $USER@$IP:/tmp/script.sh > /dev/null&
 
-echo $?; sleep 2
+# USER - PORTA1
+	cat $arcScript | sshpass -p $PASSWORD ssh -p $PORTSSH \
+		-o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" \
+			-o "StrictHostKeyChecking no" $USER@$IP \
+				'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
 	retorno=$?
 
+	content="$USER $IP:$PORTSSH"
+
+
 	if [ $retorno = 5 ]; then
-content="$userMF $PORTSSH"
-#$userMF & passMF - Porta SSH
-		sshpass -p $passMF scp -P $PORTSSH -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh $userMF@$IP:/tmp/script.sh > /dev/null&
-		sshpass -p $passMF ssh -p $PORTSSH -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $userMF@$IP 'chmod +x /tmp/script.sh; /tmp/script.sh'
-# $USER - Porta SSH2
-	elif [ $retorno != 0 ]; then
-content="$USER $PORTSSHSecond"
-		sshpass -p $PASSWORD scp -P $PORTSSHSecond -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh $USER@$IP:/tmp/script.sh > /dev/null&
+
+		#$userMF & passMF - Porta SSH
+
+		USER="$userMF"
+		PASSWORD="$passMF"
+		cat $arcScript | sshpass -p $PASSWORD ssh -p $PORTSSH \
+			-o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" \
+				-o "StrictHostKeyChecking no" $USER@$IP \
+					'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
+
+		# Verificacao de sucesso para report;
+		checkUserAndOrPass
+
+# $USER & $PASS - Porta SSH secundaria
+	elif [ $retorno = 255 ]; then
+
+		PORTSSH=$PORTSSHSecond
+		cat $arcScript | sshpass -p $PASSWORD ssh -p $PORTSSH \
+		-o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" \
+		-o "StrictHostKeyChecking no" $USER@$IP \
+		'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
 		retorno=$?
 
-		sshpass -p $PASSWORD ssh -p $PORTSSHSecond -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$IP 'chmod +x /tmp/script.sh; /tmp/script.sh'
-		retorno=$?
+		content="$USER $IP:$PORTSSH"
 
-# $userMF  - PORT SSH2
-		if [ $retorno != 0 ]; then
-content="$userMF $PORTSSHSecond"
-			sshpass -p $passMF scp -P $PORTSSHSecond -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh $userMF@$IP:/tmp/script.sh > /dev/null&
-			retorno=$?
-
-			sshpass -p $passMF ssh -p $PORTSSHSecond -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $userMF@$IP 'chmod +x /tmp/script.sh; /tmp/script.sh'
-			retorno=$?
-#echo "$IP	$retorno	PORTA 7722" >> 7722
+		if [ $retorno = 255 ]; then
+			content="$IP - ERROR Port Access"
 		fi
 
-	else
 
-# $USER - Porta SSH
-		sshpass -p $PASSWORD ssh -p $PORTSSH -o "UserKnownHostsFile=/dev/null" -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$IP 'chmod +x /tmp/script.sh; /tmp/script.sh'
-		retorno=$?
-content="$USER $PORTSSH"
+# $userMF & $passMF  - PORT SSH Secundaria;
+		if [ $retorno = 5 ]; then
 
+			USER="$userMF"
+			PASSWORD="$passMF"
+			PORTSSH=$PORTSSHSecond
+			cat $arcScript | sshpass -p $PASSWORD ssh \
+			-p $PORTSSH -o "UserKnownHostsFile=/dev/null" \
+			-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" \
+			$USER@$IP 'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
+			retorno=$?
+
+			checkUserAndOrPass
+
+		fi
 	fi
 
-#	echo "$IP:$PORTSSH	$retorno" >> /tmp/report.out
-sleep 1
-echo $content >> /tmp/report.out
+# Arquivo de saida/ Report;
+	echo "$content" >> $arcReport
 }
 
 
+# Tempo de execucao
 runtime(){
 	finalDate=`date +%s`
 	addition=`expr $finalDate - $initialDate`
@@ -145,25 +173,39 @@ runtime(){
 # ===========================================================================#
 # ======================	EXECUCAO DO SCRIPT	=====================#
 # ===========================================================================#
-clear; unset killSessionSSH; sleep 5
-initialDate=`date +%s`
+clear; unset killSessionSSH
 
 userMF="mother"
 passMF="fucker"
 
-read -p "Informe o nome do usuário: " USER
+echo "Enter with user: "
+read USER
 
-echo; read -s "Informe a senha para $USER: " PASSWORD
+echo; echo "Enter with password for $USER: "
+read -s PASSWORD
 
-echo; read -p "Informe o IP: (será considerado /16) " IP
+echo; echo "Sign in with IP initial: "
+read IP
 
-echo; read -p "Porta SSH: " PORTSSH
-PORTSSHSecond='7722'
+echo; echo "Sign in with IP final: "
+read IPFinal
 
-oct1=`echo $ip | cut -d. -f1`; oct2=`echo $ip | cut -d. -f2`
-oct3=`echo $ip | cut -d. -f3`; oct4=`echo $ip | cut -d. -f4`
+echo; echo "SSH port [22]: "
+read PORTSSH
+
+echo; echo "SSH secondary port [XXXXX]: "
+read PORTSSHSecond
+
+oct1=`echo $IP | cut -d. -f1`; oct2=`echo $IP | cut -d. -f2`
+oct3=`echo $IP | cut -d. -f3`; oct4=`echo $IP | cut -d. -f4`
+
+octF=( $(echo $IPFinal | cut -d. -f1) $(echo $IPFinal | cut -d. -f2) \
+	$(echo $IPFinal | cut -d. -f3) $(echo $IPFinal | cut -d. -f4) )
 
 clear; echo
-	blocoPrincipal
+	mainBlock
 
-echo; echo ; runtime
+sleep 20; clear; echo; echo ; runtime >> $arcReport
+
+echo "	Relatorio encontra-se em: $arcReport"
+#cat $arcReport | more

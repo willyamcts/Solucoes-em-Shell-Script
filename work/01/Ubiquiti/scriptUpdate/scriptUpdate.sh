@@ -3,14 +3,11 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 19/12/2016;
+# Data: 12/2016 - 10:04;
 #
 # Descrição: Faz atualização de firmware de dispositivos Ubiquiti 5.8 GHz.
-#	Alterar linha 64 e arquivo contentMainBlock.part.
+#	Alterar linha 65 e arquivo contentMainBlock.part.
 
-
-source contentExecution.part
-source contentMainBlock.part
 
 # v16 = Incrementando runtime e data e hora da execucao no arq. report.out
 # v18 = Manipulacao arquivos via variavel; Possivel alterar porta SSH;
@@ -41,6 +38,10 @@ source contentMainBlock.part
 #	gera um relatorio simples de execucao presente em ./ouput.txt;
 
 
+source contentExecution.part
+source contentMainBlock.part
+
+
 arcAddress='/tmp/address_responding.txt'
 arcReport='./report.out'
 arcLog='/tmp/log_update.out'
@@ -61,9 +62,8 @@ blocoPrincipal(){
 	fi
 
 	# Range de IPs
-	for ip in $oct1.{76,79}.{254..170}.{5..254} ; do
-#	for ip in $oct1.{76,79}.{3..70}.{5..254} ; do
-#	for ip in $oct1.{76,78,79}.{42,40,74,73,3}.{5..254} ; do
+	for ip in $oct1.{76,79}.{3,8,13,10,73,74,113,14,15,16,163,201,130,131}.{5..254} ; do
+#	for ip in $oct1.{76,79}.{3,8,13,10,73,74,113}.{5..254} ; do
 		# chamada da funcao verifica IPs ativos;
 		verifyAddressReply > /dev/null &
 
@@ -90,8 +90,6 @@ blocoDeExecucao(){
 
 	# respectivo IP presente na linha;
 	for ((linhaAtual=1; $linhaAtual <= $qtLines; linhaAtual++)); do
-
-		delArchiveSSH
 
 		# recebe IP da linha especifica
 		ip=`sed -n $linhaAtual'p' $2`
@@ -141,33 +139,27 @@ date=`echo \`date +%s\` + '540' | bc`
 comandoUpdate(){
 
 	echo; echo
-	sshpass -p $PASSWORD scp -P $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh $USER@$ip:/tmp/script.sh > /dev/null
-	retorno=$?
-
-	# Verfica erro na transferencia via SCP;
-	if [ $retorno != 0 ] ; then
-		content="Falha ao enviar script, $retorno"
-
-	else
-
+	
 		killSession > /dev/null &
 		PIDKSSH=$!
 
-		delArchiveSSH; sleep 1
-
-		sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'chmod +x /tmp/script.sh; /tmp/script.sh'
+		cat /tmp/.script.sh | sshpass -p $PASSWORD \
+			ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null"\
+				$USER@$ip 'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
 		retorno=$?
 
-		content="Falha conexão SSH, $retorno"
-#		content=$retorno
+		if [ $retorno = 0 ]; then
+			content="Update sucess"
+		else
+			content="Update failed, $retorno"
+		fi
 
 		# Kill sessao SSH
 		kill -9 $PIDKSSH > /dev/null &
 
-	fi
-
 	echo "$ip	$content" >> $arcLog
 }
+
 
 
 # 1- Bloco execução,
@@ -177,11 +169,12 @@ accessVersion(){
 	clear; echo; echo
 	echo "		Verificando versão de $ip"
 
-	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
+	version=`sshpass -p $PASSWORD ssh -p $PORTSSH \
+			-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" \
+				$USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
 
 	echo "$ip	$version" >> /tmp/updates.txt
 }
-
 
 
 runtime(){
@@ -199,12 +192,9 @@ buildReport() {
 	# Info eq. fora da versão atual;
 	manualUpdate=`grep -v $CURRENTVERSION /tmp/updates.txt | cut -f1 | wc -l`
 
-	if [ -e $arcReport ] ; then
 		echo >> $arcReport
-		echo -e "	\n=============== $date ================== " >> $arcReport
-	fi
-
-	clear; echo -e "\n			REPORT FINAL:	\n  $manualUpdate equipamento(s) não atualizado(s) de $qtDevices.	" >> $arcReport
+		echo -e "\n		=============== $date - REPORT FINAL ================== \
+					\n  $manualUpdate equipamento(s) não atualizado(s) de $qtDevices." >> $arcReport
 
 	for i in `cat $arcAddress`; do
 			echo -n "$i " >> $arcReport
@@ -230,12 +220,11 @@ read -s PASSWORD
 echo; echo "Informe o IP: "
 read IP
 
-echo; echo "Informe a versão atual do firmware: [ex. 5.6.8] "
-read CURRENTVERSION
-#CURRENTVERSION='5.6.9'
+echo; echo "Informe a versão atual do firmware: [5.6.8] "
+#read CURRENTVERSION
+CURRENTVERSION='5.6.8'
 
 echo; echo "SSH port[22]: "
-PORTSSH='22'
 read PORTSSH
 
 #echo; echo "Informe o link completo para download do firmware $currentVersion: "
@@ -280,7 +269,6 @@ sleep 60
 	if [ -e /tmp/updates.txt ]; then
 		rm /tmp/updates.txt
 	fi
-
 
 
 	blocoDeExecucao accessVersion $arcAddress

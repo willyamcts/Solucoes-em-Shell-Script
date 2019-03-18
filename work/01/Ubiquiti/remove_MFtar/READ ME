@@ -1,0 +1,19 @@
+
+
+# 14:05 - 15/12/2016 - Willyam Castro
+# 	Erros: 
+#		- Algumas sessoes SSH podem travar, esse erro não foi tratado;
+#
+# 	Incrementado: 
+#		- Removido funcoes inuteis, cada IP ativo ja executa funcao
+#		   sem necessidade de ler um arquivo;
+#		- Trata erro de porta e/ou de autenticacao;
+#		- Gerando log de facil compreensao e informacoes uteis (localizado em /tmp/report.out);
+
+
+Instruções:
+	* Necessário arquivo "contentExecution.part" e "scriptExport/removScript.sh";
+
+Consumo alto de memória:
+
+	* Média de 500MB, recomendo 1GB de memória livre para executar em uma range de IP /18;

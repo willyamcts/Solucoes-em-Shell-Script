@@ -125,7 +125,8 @@ makeReport() {
 					fi
 					;;
 
-			"$option5")
+		# Para deviceFullReport
+			"$option6")
 					if [ "$2" = 0 ]; then
 						content=$(printf "%s\t%s\t%s\t%s\t%s" "$3" "$4" "$5" "$6" "$7")
 					else
@@ -183,7 +184,7 @@ echo "LINHA 168: RETURN=$return" #TODO: Teste
 			return=$(echo "$return" | cut -d+ -f2)
 echo "LINHA 168: RETURN=$return" #TODO: Teste
 
-			makeReport "$1" "$return" "$deviceName" TODO:Remover comentario
+			makeReport "$1" "$return" "$deviceName"
 
 		elif [ $(echo $mainFunction | grep changeChannel) ]; then
 			return=$($mainFunction "$user" "$pass" "$1" "$channels" "ARG1")

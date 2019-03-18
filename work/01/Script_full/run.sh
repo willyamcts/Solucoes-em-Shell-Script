@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 12/04/2017;
+# Data: 13/04/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -20,9 +20,13 @@
 
 # Adicao de opcoes: handling e dialogs
 
+# 15/04: Ver como passar canais por parametro para o eq.;
+# 17/04: Mesmo dia 15 + adaptação CT (Somente adicionar CT ou também 
+#	setar CT;
+# 19/04: Acrescentar tempo de execução no relatório;
+
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
-
 
 #sed '/$pass/ s/^$mainFunction/#$mainFunction/'
 

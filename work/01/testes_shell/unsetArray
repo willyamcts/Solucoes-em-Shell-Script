@@ -1,0 +1,12 @@
+#!/bin/bash
+
+a[123]=foo a[456]=bar a[789]=baz
+echo ${a[@]}
+
+echo "Posições de a= ${!a[@]}"
+
+keys=("${!a[@]}")
+echo "Posições de a em \$keys= ${keys[@]}"
+for i in "${keys[@]::5}"; do unset "a[$i]"; done
+
+[[ -n ${a[@]} ]] && echo "Não vazio" || echo "Vazio"
