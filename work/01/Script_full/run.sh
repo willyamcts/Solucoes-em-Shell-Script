@@ -3,12 +3,12 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 18/04/2017 - 19:30;
+# Data: 19/04/2017 - 13:52;
 #
-# Descrição: Realiza backup de dispositivos Ubiquiti; gera relatório de 
-#	dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
-#	PPPOE, AP conectado e seu respectivo sinal; habilita Compliance 
-#	Teste e alteração de canal(is) em massa; também é possível verificar 
+# Descrição: Realiza backup de dispositivos MikroTik e Ubiquiti; gera relatório 
+#	de dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
+#	PPPOE, AP conectado e seu respectivo sinal; adicionar Compliance Test e 
+#	alteração de canais para enlace em AP; também é possível verificar 
 #	dispositivos respondentes a ICMP. Os endereços utilizados para uso das 
 #	funções são inseridos via interface (zenity) ou de um arquivo, onde 
 #	cada IP deve estar em uma linha. Está configurado para iniciar 
@@ -18,12 +18,8 @@
 # Requisitos: Zenity e SSHPass.
 
 
-# Adicao de opcoes: handling e dialogs
-
-# 19/04: Acrescentar tempo de execução no relatório;
-
-
 source ./dialog/dialogs.lxte ./chk/handling.ch
+
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
 
