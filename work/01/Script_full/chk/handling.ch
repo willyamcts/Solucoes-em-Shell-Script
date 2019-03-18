@@ -113,7 +113,7 @@ makeReport() {
 				;;
 			10) out='Modificação já existe no dispositivo'
 				;;
-			default) out="Error cod. $2"
+			default) out="Error code $2"
 				;;
 		esac	
 		
