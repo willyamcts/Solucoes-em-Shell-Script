@@ -3,14 +3,14 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 30/05/2017;
+# Data: 25/05/2017;
 #
 # Descrição: Registra MAC do dispositivo ao selecionar o modelo, para fins de 
 #	teste de bom funcionamento do dispositivo. Funciona em dispositivos 
-#	atuando em 5.8GHz com AirOS 5 ou superior.	
+#	atuando em 5.8GHz e dispositivos Legancy.	
 #	- Por meio do ping, verifica qual IP responde 1.20 ou 2.1 e verifica o MAC
 #	- Verificado o MAC, o modelo selecionado na lista e o MAC sao adicionados ao 
-#		arquivo "testadados_[DIA-MES]" do diretório atual.
+#		arquivo "testadados_[DIA-MES]" do diretório atual
 
 
 DEVICE=$(zenity --width=450 --height=300 \
@@ -40,25 +40,43 @@ if [ $? = 0 ]; then
 
 else	
 
-
 	ping -s1 -c2 192.168.2.1 1>&2>/dev/null
 
 	if [ $? = 0 ]; then
 		mac=$(arp -a 192.168.2.1 | cut -d" " -f4)
+
 		
 		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+		out=$(echo $?)
 
 
-		if [ $? != 0 ]; then
+		if [[ $? != 0 && $? != 5 ]]; then
 			client=$(sshpass -p MINHASENHA ssh -p7722 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
-			out="$?"
+			out=$(echo $?)
+
+			if [[ $out != 0 && $out != 5 ]]; then
+				client=$(sshpass -p MINHASENHA ssh -p22 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+				out=$(echo $?)
+
+				if [[ $out != 0 && $out != 5 ]]; then
+					client=$(sshpass -p MINHASENHA ssh -p7722 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+					out=$(echo $?)
+				fi
+			fi
 		fi
 
-		printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "$dstFile"
+		[ -n $client ] && printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "$dstFile" || printf "%s\t%s\t%s\n" "$DEVICE" "$mac" >> "$dstFile"
 	fi
 
 fi
 
-	[[ $out = 0 ]] && clear && tail -n1 "$dstFile" || (clear && printf "\tNenhum dispositivo disponível em 192.168.1.20 e 192.168.2.1\n\n")
+
+	if [ $out = 0 ]; then
+		clear && tail -n1 "$dstFile" && (echo; echo)
+	elif [ $out = 5 ]; then
+		clear && printf "\t\t\**** \033[1;31mATENÇÂO:\033[0m Usuário e/ou senha inválido(s) **** \n\n"
+	else
+		clear && printf "\tNenhum dispositivo disponível em 192.168.1.20 e 192.168.2.1\n\n"
+	fi
 
 $0

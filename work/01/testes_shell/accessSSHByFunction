@@ -22,4 +22,4 @@ echo $run
 }
 
 
-deviceFullReport "USER" "PASSWORD" "IP"
+deviceFullReport "USER" "PASSWORD" "192.168.0.1"

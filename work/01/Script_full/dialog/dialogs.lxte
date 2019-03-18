@@ -208,7 +208,7 @@ currentVersion() {
 URLFirmwares() {
 
 	VERSIONS=$(zenity --forms --title="URL download firmwares" --separator="," \
-			--add-entry="URL XM: " --add-entry="URL XW: ")
+			--add-entry="URL XM (HTTP): " --add-entry="URL XW (HTTP): ")
 
 	xm=$(echo $VERSIONS | cut -d, -f1)
 	xw=$(echo $VERSIONS | cut -d, -f2)
