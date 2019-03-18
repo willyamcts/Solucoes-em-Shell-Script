@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 14/06/2017;
+# Data: 22/06/2017;
 #
 # Descrição: Por meio do ping, verifica qual IP responde 1.20 ou 2.1 
 #	e informa no terminal as informações do dispositivo. Funciona em 
@@ -11,12 +11,17 @@
 #	* Alterado para executar em derivados do Debian e Arch Linux.
 
 
-# FUNCAO: Informa qual modelo do equipamento Ubiquiti, MAC e versão do firmware;
-#	- Caso equipamento responda pelo IP 192.168.2.1 e esteja de acordo com as configurações de cliente, é redefinido as configurações para o padrão de fábrica;
+# FUNCAO: Informa na tela qual o modelo do equipamento Ubiquiti, MAC e versão do firmware e usuario PPPoE;
+	#	- Caso equipamento responda pelo IP 192.168.2.1 e esteja de acordo com as configurações de cliente USER, é redefinido as configurações para o padrão de fábrica;
+	# Caso responda pelo IP 192.168.1.20 é feito a adição de ComplianceTest e alterado a porta de acesso do serviço SSH de 22 para 7722
 
 
 sshUBNT() {
-	sshpass -p 'ubnt' ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 $1
+	sshpass -p 'ubnt' ssh -p$1 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 $2
+}
+
+sshUBNTDiffieHellman() {
+	sshpass -p ubnt ssh -p$1 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 $2
 }
 
 sshUSER() {
@@ -54,17 +59,23 @@ read -p " Deseja executar? [S/n] " answer
 			mac=$(arp -a 192.168.1.20 | cut -d" " -f4)
 			ip='192.168.1.20'
 
-			infos=$(sshUBNT 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2)+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)' "ARG1") 1>&2>/dev/null
+			infos=$(sshUBNT 22 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2):22+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && sed -i 's/sshd.port=.*/sshd.port=7722/' /tmp/system.cfg && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)' "ARG1") 1>&2>/dev/null
 			out=$(echo $?)
 
-
 			if [[ $out != 0 && $out != 5 ]]; then
-				infos=$(sshpass -p ubnt ssh -p22 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@$ip 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2)+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)') 1>&2>/dev/null
+				infos=$(sshUBNT 7722 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2):7722+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)' "ARG1") 1>&2>/dev/null
 				out=$(echo $?)
 
+
 				if [[ $out != 0 && $out != 5 ]]; then
-					infos=$(sshpass -p ubnt ssh -p22 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@$ip 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2)+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)') 1>&2>/dev/null
+					infos=$(sshUBNTDiffieHellman 22 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2):22+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && sed -i 's/sshd.port=.*/sshd.port=7722/' /tmp/system.cfg && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)') 1>&2>/dev/null
 					out=$(echo $?)
+
+					if [[ $out != 0 && $out != 5 ]]; then
+					infos=$(sshUBNTDiffieHellman 7722 'echo -n $(cat /etc/board.info | grep board.hwaddr | cut -d= -f2):7722+$(cat /etc/board.info | grep board.name | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-); (ls -l /etc/persistent/ct > /dev/null && echo "+Presente") || (touch /etc/persistent/ct && cfgmtd -w -p /etc && echo "+Adicionando..." && reboot)') 1>&2>/dev/null
+						out=$(echo $?)
+
+					fi
 
 				fi
 

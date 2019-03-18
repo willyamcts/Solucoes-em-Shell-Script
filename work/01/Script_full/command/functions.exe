@@ -8,7 +8,7 @@
 
 ##### FUNCOES PADROES PARA ACESSO VIA SSH - USO: #####
 #						     #
-#	$(connectSSHp22 "$1" "$2" "$3" '[comandos]' )#
+#	$(connectSSHp* "$1" "$2" "$3" '[comandos]' )#
 
 # Padrao conexao SSH na porta 22
 connectSSHp22() {
@@ -26,6 +26,22 @@ connectSSHp7722() {
 				-o 'StrictHostKeyChecking no' $1@$3 $4 1>&2>/dev/null
 }
 
+
+# Acesso SSH na porta 22 com algoritmo de criptografia Diffie-hellman
+connectSSHp22Diffie() {
+	sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' \
+		-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+			-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' $1@$3 $4 1>&2>/dev/null
+
+}
+
+# Acesso SSH na porta 7722 com algoritmo de criptografia Diffie-hellman
+connectSSHp7722Diffie() {
+	sshpass -p "$2" ssh -p7722 -o 'ServerAliveCountMax=2' \
+		-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+			-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' $1@$3 $4 1>&2>/dev/null
+
+}
 
 #######################################################
 
@@ -377,42 +393,42 @@ servicesPorts() {
 #	if [ -z $command ]; then
 
 #echo "Command vazio" #TODO: Comantario
-		command=""
 
-		if [ -n $4 ]; then
-
-			for (( i=1; i <= 3; i++ )); do
-				service=$(echo $4 | cut -d+ -f$i)
-echo "1o FOR"
-				if [ -n $service ]; then
-
-					case $service in
-						HTTP) preCommand='sed -i 's/httpd.status=.*/httpd.status=disabled/' /tmp/system.cfg'
-							;;
-						HTTPS) preCommand='sed -i 's/httpd.https.status=.*/httpd.https.status=disabled/' /tmp/system.cfg'
-							;;
-						SSH) preCommand='sed -i 's/sshd.status=.*/sshd.status=disabled/' /tmp/system.cfg'
-							;;
-					esac
+		command='sed -i 's/httpd.status=.*/httpd.status=enabled/' /tmp/system.cfg && sed -i 's/httpd.https.status=.*/httpd.https.status=enabled/' /tmp/system.cfg'
 
 
-					if [ -n "$preCommand" ]; then
-						if [ -z "$command" ]; then
-							command="$preCommand"
-						elif [ "$command" != "$preCommand" ]; then
-							command="$command; $preCommand"
-						fi
+	if [[ -n "$4" ]]; then
+
+		for (( i=1; i <= 3; i++ )); do
+			service=$(echo $4 | cut -d"+" -f$i)
+
+			if [[ -n "$service" && "$service" != "" && $service != " " ]]; then
+
+				case $service in
+					HTTP) command=$(echo $command | sed 's/httpd.status=enabled/httpd.status=disabled/')
+						;;
+					HTTPS) command=$(echo $command | sed 's/httpd.https.status=enabled/httpd.https.status=disabled/')
+						;;
+					SSH) preCommand='sed -i 's/sshd.status=.*/sshd.status=disabled/' /tmp/system.cfg'
+						;;
+				esac
+
+			fi	
+
+				if [ -n "$preCommand" ]; then
+					if [ -z "$command" ]; then
+						command="$preCommand"
+					elif [ "$command" != "$preCommand" ]; then
+						command="$command; $preCommand"
 					fi
-
 				fi
 
-				unset service preCommand
-			done
+#echo $command
 
-		else
-			command="sed -i 's/httpd.status=.*/httpd.status=enabled/' /tmp/system.cfg && sed -i 's/httpd.https.status=.*/httpd.https.status=disabled/' /tmp/system.cfg && sed -i 's/sshd.status=.*/sshd.status=disabled/' /tmp/system.cfg"
+			unset service preCommand
+		done
 
-		fi
+	fi
 
 
 			# Tratamento variavel servicesPort, recebe portas dos serviços
@@ -423,7 +439,7 @@ echo "1o FOR"
 
 				if [ "$port" != "" ]; then
 					case $i in
-						1) preCommand="cat /tmp/system.cfg | grep httpd.status=enabled && (sed -i \"s/httpd.port=.*/httpd.port=$port/\" /tmp/system.cfg || echo "httpd.port=$port" >> /tmp/system.cfg) || (sed -i "s/httpd.status=.*/httpd.status=enabled/" /tmp/system.cfg && sed -i "s/httpd.port=.*/httpd.port=$port/" /tmp/system.cfg || echo -e "httpd.port=$port\\nhttpd.session.timeout=900" >> /tmp/system.cfg)"
+						1) preCommand="cat /tmp/system.cfg | grep httpd.status=enabled && sed -i \"s/httpd.port=.*/httpd.port=$port/\" /tmp/system.cfg || (sed -i "s/httpd.status=.*/httpd.status=enabled/" /tmp/system.cfg && sed -i "s/httpd.port=.*/httpd.port=$port/" /tmp/system.cfg)"
 							;;
 						2) preCommand="sed -i \"s/httpd.https.port=.*/httpd.https.port=$port/\" /tmp/system.cfg"
 							;;
@@ -442,16 +458,15 @@ echo "1o FOR"
 				unset port preCommand
 			done
 
-echo Command final=$command
+#echo -e "\n\n\nCommand final=$command"
 
 		fi
-
 
 		connectSSHp22 $1 $2 $3 << OEF 
 			cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 			$command
 			sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
-#			cfgmtd -w -p /etc && reboot
+			cfgmtd -w -p /etc && reboot
 OEF
 		out=$(echo $?)
 
@@ -460,21 +475,28 @@ OEF
 				cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 				$command
 				sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
-#				cfgmtd -w -p /etc && reboot
+				cfgmtd -w -p /etc && reboot
 OEF
 			out=$(echo $?)
 
 			if [[ $out = 1 || $out = 255 ]]; then
-				sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' \
-					-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
-						-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" "cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && $out"
+				connectSSHp22Diffie $1 $2 $3 << OEF
+					cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+					$command
+					sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+					cfgmtd -w -p /etc && reboot
+OEF
 				out=$(echo $?)
 
 				if [[ $out = 1 || $out = 255 ]]; then
-					sshpass -p "$2" ssh -p7722 -o 'ServerAliveCountMax=2' \
-						-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
-							-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" "cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && $out"
+					connectSSHp7722Diffie $1 $2 $3 << OEF
+					cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+					$command
+					sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+					cfgmtd -w -p /etc && reboot
+OEF
 					out=$(echo $?)
+
 				fi
 
 			fi
@@ -482,7 +504,6 @@ OEF
 		fi
 
 #	fi
-
 
 	echo $out
 }

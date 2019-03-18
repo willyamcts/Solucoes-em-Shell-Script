@@ -29,40 +29,39 @@ verifyOption() {
 			dstFILES=$(saveFiles "ARG1")
 echo "$dstFILES"
 			[[ -e $dstFILES ]] || mkdir $dstFILES
-			;;
+				;;
 		"$option2") mainFunction=backupUbiquiti
 			# Utilizar variavel dstFILES que contem o diretorio a ser salvo os backups.
 			dstFILES=$(saveFiles "ARG1")
-echo "$dstFILES"
 			[[ -e $dstFILES ]] || mkdir $dstFILES
-			;;
+				;;
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
 #			createScChannels "$channels" #Desnecessario pois e criado na funcao 
-			;;
+				;;
 		"$option4") mainFunction=changeUserPwd
 			handData entryNewData 1 "ARG1"
-			;;
+				;;
 		"$option5") mainFunction=servicesPorts
 			disableSERVICE=$(disableServices "ARG1")
 echo $disableSERVICE
 			servicesPORT=$(changePorts "ARG1")
 echo $servicesPORT
 
-			;;
+				;;
 		"$option6") mainFunction=massiveCompliance
 #			selectOptionCT
 #			[[ $? = 1 ]] && echo "asdsdsa" #mainFunction=massiveCompliance
-			;;
+				;;
 		"$option7") mainFunction=customCommand
 			CMD=$(entryCustomCommand "ARG1")
-			;;
+				;;
 		"$option8") mainFunction=activeAddress
 			unset handData
-			;;
+				;;
 		"$option9") mainFunction=deviceFullReport
-			;;
+				;;
 	esac
 }
 
@@ -262,8 +261,9 @@ lastHandFunction() {
 
 
 		elif [ $(echo $mainFunction | grep servicesPort) ]; then
-			$mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1"
-#			return=$($mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1") && makeReport "$1" "$return"
+#			$mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1"
+#			tail -n2 $toFILE | grep "Tempo" && printf
+			(return=$($mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1") && makeReport "$1" "$return") &
 
 		elif [ $(echo $mainFunction | grep custom) ]; then
 echo "CustomCommand"
@@ -291,6 +291,8 @@ handAddressToAccess() {
 		for ((o2="${addr[1]}"; $o2 <= ${addr[5]}; o2++)); do
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
+
+				clear && printf "\n\n\n\tVerificando faixa $o1.$o2.$o3.0/24 \n\n"
 
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
