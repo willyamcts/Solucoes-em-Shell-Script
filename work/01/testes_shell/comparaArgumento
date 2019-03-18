@@ -1,0 +1,18 @@
+#!/bin/bash
+
+fun() {
+
+echo "$2"
+
+if [ $2 -eq 1 ]; then
+	echo "Igual a 1"
+else
+	echo "Nao igual a 1"
+fi
+
+}
+
+
+
+
+fun "30" "1"

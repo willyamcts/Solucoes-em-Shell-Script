@@ -3,14 +3,15 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 02/12/2016;
+# Data: 12/2016;
 #
-# Descrição: Faz o levantamento de dispositivos desatualizados e/ou credenciais 
-#	fora do padrão estabelecido. Gera um log com informação geral, contabilizando
-#	todos os dispositivos e seu respectivo IP e versão do firmware.
+#	Verifica IPs ativos na rede e adiciona a um arquivo na
+#	pasta temporaria; realizado leitura do arquivo, fazendo chamada
+#	da funcao comandoUpdate; Apos update faz a verificacao de IPs com versao
+#	do firmware, equipamentos com versao fora da atual sao reiniciados e apos
+#	2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
+#	gera um relatorio simples de execucao presente em ./ouput.txt;
 
-
-#source contentMain.part
 
 # TODO: Nao rerifica se arquivos de execucao anteriores existem
 #
@@ -23,13 +24,8 @@
 # * 
 
 
+#source contentMain.part
 
-#	Verifica IPs ativos na rede e adiciona a um arquivo na
-#	pasta temporaria; realizado leitura do arquivo, fazendo chamada
-#	da funcao comandoUpdate; Apos update faz a verificacao de IPs com versao
-#	do firmware, equipamentos com versao fora da atual sao reiniciados e apos
-#	2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
-#	gera um relatorio simples de execucao presente em ./ouput.txt;
 
 # COMMENT:
 #	Ao selecionar opcao 1, e realizado a opcao 0 tambem, saida gerada em ./output.txt, 
@@ -41,7 +37,7 @@ arcAddress='/tmp/address.txt'
 startingBlock(){
 
 	date=`date +%H:%M" - "%d/%m/%Y`
-
+answer=5
 	until [ $answer -lt 5 ]; do
 
 		clear; echo " "
@@ -53,8 +49,7 @@ startingBlock(){
 #		echo "		[ X ] Alterar porta de serviços em massa;"
 #		echo "		[ 4 ] Verificar sinal PTPs;"
 #		echo "		[ 5 ] Adicionar Compilance Test em massa;"
-#		read -p "Digite a opção desejada: " answer
-answer=1
+		read -p "Digite a opção desejada: " answer
 	done
 
 
@@ -64,10 +59,10 @@ answer=1
 		1) currentFunction=verifyVersion ;;
 	esac
 
-sleep 5
-
 	# Reset no valor da variavel answer para reutiliza-la posteriormente;
 	answer=0
+
+
 	mainBlock
 }
 
@@ -79,7 +74,7 @@ mainBlock(){
 	excluirArquivos
 
 	# chamada da funcao;
-	verificaPacoteSSHPass
+#	verificaPacoteSSHPass
 
 	verifyActiveAddress
 
@@ -88,25 +83,23 @@ mainBlock(){
 
 # Verifica enderecos ativos, manipulando 3o octeto;
 verifyActiveAddress() {
-#clear; echo
-#echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 
-	until [ $oct3 -eq $oct3F ]; do
-
+	until [ $oct3 -gt $oct3F ]; do
+echo EM UNTIL
 		if [ -e $arcAddress ]; then
 			rm $arcAddress
 #		if [ -e /tmp/address_responding.txt ]; then
 #			rm /tmp/address_responding.txt
 		fi
 
+
 		# Range de IPs
 		for ip in $oct1.$oct2.$oct3.{5..254} ; do
 
 #TODO: Mostrar qual faixa esta escaneando
-#			if [ $oct3 != $(($oct3+1)) ]; then
-			if [ `echo $ip | cut -d. -f4` = 1 ]; then
+			if [ `echo $ip | cut -d. -f4` = 5 ]; then
 				clear; echo
-				echo "	Verificando IPs da faixa [ $ip/24 ]"
+				echo "	Verificando IPs da faixa [ $oct1.$oct2.$oct3.1/24 ]"
 			fi
 
 			# chamada da funcao verifica IPs que respondem
@@ -117,14 +110,6 @@ verifyActiveAddress() {
 		# time, caso contrario executa remocao antes da condicional;
 		sleep 15
 
-		if [ -e $arcAddress ]; then
-			# Faz chamada funcao com comandos de execucao;
-#			archive="/tmp/address_responding.txt"
-			executionBlock $arcAddress
-			incrementValue # Incrementa quantidade linhas do arq.
-echo $answer ; sleep 10
-		fi
-
 		((oct3++))
 
 	done
@@ -134,23 +119,10 @@ echo $answer ; sleep 10
 # Manipula informacoes de arquivo, que serao utilizadas no bloco de execucao.
 executionBlock(){
 
-#TODO: Problema em $arcAddress
-	# quantidade de linhas do arquivo /tmp/address_responding;
-	qtLines=`wc -l $1 | cut -d " " -f1`
+		delArchiveSSH 1>&2>/dev/null
 
-	# respectivo IP presente na linha;
-	for ((linhaAtual=1; "$linhaAtual" <= "$qtLines"; linhaAtual++)); do
-
-		delArchiveSSH
-
-		# recebe IP da linha especifica
-		ip=`sed -n "$linhaAtual"'p' $1`
-
-		sleep 3
 		# Chama funcao com bloco de comandos a executar;
-		$currentFunction > /dev/null &
-
-	done
+		$currentFunction > /dev/null
 
 }
 
@@ -163,9 +135,11 @@ executionBlock(){
 #	 via ICMP, 2 pacotes somente.
 verificaRespostaIP(){
 
-	ping -c 2 $ip
+	ping -s1 -c2 $ip
 	if [ $? = 0 ]; then
-		echo $ip >> $arcAddress
+		$currentFunction > /dev/null
+
+#		echo $ip >> $arcAddress
 	fi
 }
 
@@ -196,14 +170,6 @@ verificaPacoteSSHPass(){
 }
 
 
-
-# Variavel reutilizada, recebendo a quantidade de linhas de um arquivo e
-#	incrementando
-incrementValue(){
-	answer=$(($answer+$qtLines))
-}
-
-
 delArchiveSSH(){
 	# Remove arquivo SSH profile atual;
 	if [ -e ~/.ssh/known_hosts ] ; then
@@ -219,7 +185,11 @@ excluirArquivos(){
 
 	# Remove arquivo de enderecos;
 	if [ -e $arcAddress ] ; then
-		rm $arcAddress
+		rm -f $arcAddress
+	fi
+
+	if [ -e /tmp/address_version.txt ]; then
+		rm -f /tmp/address_version.txt
 	fi
 
 	# Remover arquivo contem os IP e ID das RBs;
@@ -242,9 +212,17 @@ verifyVersion(){
 
 	clear; echo "		Verificando versão dos equipamentos...."
 	echo -e "\n\n	$ip"
-	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
 
-	if [ $? = 5 ]; then
+	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
+	out=$?
+
+	if [[ $out = 1 || $out = 255 ]]; then
+		version=`sshpass -p $PASSWORD ssh -p $PORTSSH2 -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
+		out=$?
+	fi
+
+
+	if [ $out = 5 ]; then
 		echo "$ip	Senha invalida" >> /tmp/log_passwords.txt
 	fi
 
@@ -333,20 +311,29 @@ read USER
 echo " "; echo "Informe a senha de acesso para $USER: "
 read -s PASSWORD; echo " "
 
-echo "Informe um segundo usuario padrao de acesso aos equipamentos: "
-read USER2
 
-echo " "; echo "Informe a senha de acesso para $USER2: "
-read -s PASSWORD2; echo " "
+#echo "Informe um segundo usuario padrao de acesso aos equipamentos: "
+#read USER2
+
+#echo " "; echo "Informe a senha de acesso para $USER2: "
+#read -s PASSWORD2; echo " "
+
 
 echo " "; echo "Informe o IP inicial: (será considerado /16) "
-read ip
+#read ip
+ip="10.76.176.10"
 
 echo " "; echo "Informe o IP final: (será considerado /16) "
-read ipFinal
+#read ipFinal
+ipFinal="10.76.231.250"
 
 echo " "; echo "Porta SSH: "
-read PORTSSH
+#read PORTSSH
+PORTSSH=22
+
+echo " "; echo "Porta secundária SSH: "
+#read PORTSSH2
+PORTSSH2=7722
 
 echo " "; echo "Informe a versão atual do firmware: (ex: 5.6.9)"
 read currentVersion
@@ -359,11 +346,12 @@ oct1F=`echo $ipFinal | cut -d. -f1`; oct2F=`echo $ipFinal | cut -d. -f2`
 oct3F=`echo $ipFinal | cut -d. -f3`; oct4F=`echo $ipFinal | cut -d. -f4`
 
 
-sleep 3; clear; echo " "
+clear; echo " "
 	startingBlock
 
-sleep 20
+sleep 600
 
+answer=$(wc -l /tmp/address_version.txt | cut -d" " -f1)
 # Chamada funcao para gerar relatorio
 	buildReport
 cat ./output.txt
