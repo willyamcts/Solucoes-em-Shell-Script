@@ -21,9 +21,10 @@ selectFunction() {
 option1='Backup MikroTik'
 option2='Backup Ubiquiti'
 option3='Change channel massive'
-option4='Create ComplianceTest massive'
-option5="Endereços ativos"
-option6='Report devices Ubiquiti (Client-Full)'
+option4='Change User and/or Password massive'
+option5='Create ComplianceTest massive'
+option6="Endereços ativos"
+option7='Report devices Ubiquiti (Client-Full)'
 
 	FSELECT=$(zenity --width=450 --height=400 \
 		--list --title="Functions" --text="O que deseja fazer? " \
@@ -50,7 +51,7 @@ selectModeExecution() {
 	verifyModeExec "$MOD" "addressEntry" "selectFile" 
 
 	# Chamada de funcao handling para executar dataAccess
-	handData "dataAccess"
+	handData "dataAccess" 0
 
 }
 
@@ -168,11 +169,25 @@ entryChannels() {
 }
 
 
+
 selectOptionCT() {
 	zenity --question --width=450 --height=120 --title="WARNING!" \
 		--text="Além de liberar Compliance Teste, deseja usá-lo? \
 			\n\n Será habilitado o DFS e selecionado Compliance Test como seu país."
 
 #	echo $?
+
+}
+
+
+
+entryNewData() {
+	NWUaP=$(zenity --title="Novo usuário e nova senha para os dispositivos" \
+		--password --username)
+
+	warningReturn $?
+
+	echo $(echo $NWUaP | cut -d'|' -f1)+$(echo $NWUaP | cut -d'|' -f2)
+	unset NWUaP
 
 }

@@ -37,14 +37,17 @@ verifyOption() {
 			channels=$(entryChannels "ARG1")
 #			createScChannels "$channels"
 			;;
-		"$option4") mainFunction=massiveCompliance
+		"$option4") mainFunction=changeUserPwd
+			handData entryNewData 1 "ARG1"
+			;;
+		"$option5") mainFunction=massiveCompliance
 #			selectOptionCT
 #			[[ $? = 1 ]] && echo "asdsdsa" #mainFunction=massiveCompliance
 			;;
-		"$option5") mainFunction=activeAddress
+		"$option6") mainFunction=activeAddress
 			unset handData
 			;;
-		"$option6") mainFunction=deviceFullReport
+		"$option7") mainFunction=deviceFullReport
 			;;
 	esac
 }
@@ -62,7 +65,6 @@ mode2="Address list"
 		"$mode2") $3
 			;;
 	esac
-
 }
 
 
@@ -134,6 +136,13 @@ handData() {
 		handData "$1"
 	fi
 
+
+	if [ $2 = 1 ]; then
+		newUser=$user
+		newPwd=$pass
+		unset user pass
+	fi
+
 	unset UaP
 }
 
@@ -142,7 +151,14 @@ handData() {
 makeReport() {
 	
 	if [ -z "$1" ]; then
-		content=$(printf "\n====== LOG: %s ===== %s ===== \n Range IP: %i.%i.%i.%i - %i.%i.%i.%i\n Tempo de execução:\n\n" "$FSELECT" "$(date +%d.%m.%y-%H:%M)" "${addr[0]}" "${addr[1]}" "${addr[2]}" "${addr[3]}" "${addr[4]}" "${addr[5]}" "${addr[6]}" "${addr[7]}")
+
+		if [ -z ${addr[0]} ]; then
+			content=$(printf "\n====== LOG: %s ===== %s ===== \n Address list: %s\n Tempo de execução:\n\n" "$FSELECT" "$(date +%d.%m.%y-%H:%M)" "$FILE")
+
+		else 
+			content=$(printf "\n====== LOG: %s ===== %s ===== \n Range IP: %i.%i.%i.%i - %i.%i.%i.%i\n Tempo de execução:\n\n" "$FSELECT" "$(date +%d.%m.%y-%H:%M)" "${addr[0]}" "${addr[1]}" "${addr[2]}" "${addr[3]}" "${addr[4]}" "${addr[5]}" "${addr[6]}" "${addr[7]}")
+		fi
+
 	else
 
 		case $2 in 
@@ -169,7 +185,7 @@ makeReport() {
 					;;
 
 		# Para deviceFullReport
-			"$option6")
+			"$option7")
 					if [ "$2" = 0 ]; then
 						content=$(printf "%s\t%s\t%s\t%s\t%s" "$3" "$4" "$5" "$6" "$7")
 					else
@@ -183,7 +199,6 @@ makeReport() {
 
 	fi
 
-#echo "LINHA 133: CONTENT = $content" #TODO: teste
 	printf "%s\n" "$content" >> $toFILE
 
 unset out content
@@ -196,10 +211,8 @@ lastHandFunction() {
 		if [ $(echo $mainFunction | grep backup) ]; then
 			return=$($mainFunction "$user" "$pass" "$1" "$dstFILES" "ARG1")
 
-#echo "LINHA 168: RETURN=$return" #TODO: Teste
 			deviceName=$(echo "$return" | cut -d+ -f1 | cut -d- -f1)
 			return=$(echo "$return" | cut -d+ -f2)
-#echo "LINHA 168: RETURN=$return" #TODO: Teste
 
 			makeReport "$1" "$return" "$deviceName"
 
@@ -209,7 +222,6 @@ lastHandFunction() {
 			value=$(deviceFullReport "$user" "$pass" "$1" "ARG1")
 			
 			if [ -z "$(echo $value | cut -d+ -f1)" ]; then
-#				echo "LINHA 148: VALUE, retorno vazio" #TODO: teste
 				return=$(echo $value | cut -d+ -f2)
 			else
 
@@ -224,10 +236,15 @@ lastHandFunction() {
 
 			makeReport "$1" "$return" "$device" "$mac" "$client" "$ssid" "$signal" #TODO: Rever
 
-
 		elif [ $(echo $mainFunction | grep changeChannel) ]; then
 			return=$($mainFunction "$user" "$pass" "$1" "$channels" "ARG1")
 			makeReport "$1" "$return"
+
+		elif [ $(echo $mainFunction | grep changeUserPwd) ]; then
+
+			return=$($mainFunction "$user" "$pass" "$1" "$newUser" "$newPwd" "ARG1")
+			makeReport "$1" "$return"
+
 
 		else
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")

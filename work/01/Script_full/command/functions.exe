@@ -85,7 +85,7 @@ backupMikroTik() {
 
 
 	if [ $out = 0 ]; then
-		mkdir /tmp/"$3" 1>&2>/dev/null
+		[[ ! -d /tmp/"$3" ]] && mkdir /tmp/"$3" 1>&2>/dev/null
 
 		$(sshpass -p "$2" scp -P7722 -r -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
@@ -108,14 +108,16 @@ backupMikroTik() {
 	# Execucao Local;
 	if [ $out = 0 ]; then
 
-		run=$(ls -R /tmp/"$3"/ | grep backup \
+		run=$(ls -R /tmp/"$3"/ | grep .backup | head -n1 \
 			| awk -F-20 '{print $1}' | \
 				awk '{print $1}')
 
-		mkdir "$4/$run" 1>&2>/dev/null
+		[[ ! -d "$4/$run" ]] && mkdir "$4/$run" 1>&2>/dev/null
 
 		# Move os arquivo ".backup" e ".rsc" para um subdiretorio nomeado $run no diretorio definido;
-#		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/$run/" && rm -rf /tmp/"$3/" &) || (mv "$(find /tmp/"$3/" -name "*.backup")" "$(find /tmp/$3/ -name "*.rsc")" "$4/$run/" && rm -rf /tmp/"$3/" &)
+		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/$run/" 1>2&>/dev/null) || (mv "$(find /tmp/"$3/" -name "*.backup")" "$(find /tmp/$3/ -name "*.rsc")" "$4/$run/" 1>2&>/dev/null)
+
+		rm -rf /tmp/"$3/" &
 
 
 #mv /tmp/"$3"/*.rsc "$4/$run/" || mv "$(find /tmp/"$3/" -name "*.rsc")" "$4/$run/"
@@ -154,7 +156,7 @@ changeChannel(){
 	$(connectSSHp22 "$1" "$2" "$3" << OEF
 		[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; 
 		cat /tmp/system.cfg | grep wireless.1.scan_list.status; [ $? = 0 ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
-		cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg && echo "existe" || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
+		cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
 OEF
 )
 
@@ -168,7 +170,7 @@ OEF
 			$(connectSSHp7722 "$1" "$2" "$3" << OEF
 				[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; 
 				cat /tmp/system.cfg | grep wireless.1.scan_list.status; [ $? = 0 ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
-			cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg && echo "existe" || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
+			cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
 OEF
 )
 			out=$(echo $?)
@@ -214,6 +216,43 @@ echo "#!/bin/sh
 	dstScript="$dstScript/.XsetRmt"
 }
 
+
+
+changeUserPwd() {
+
+# ERRO: Nao esta jogando o conteudo de passwd em system.cfg;
+
+	$(connectSSHp22 "$1" "$2" "$3" << OEF
+		(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+		/bin/sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
+		/bin/sed -i '/users.1.password/d' /tmp/system.cfg
+		echo "users.1.password=$(head -n1 /etc/passwd | cut -d: -f2)" >> /tmp/system.cfg
+
+OEF
+)
+
+		#/bin/sed -i "s/users.1.password=.*/users.1.password=`head -n1 /etc/passwd | cut -d: -f2`/" /tmp/system.cfg
+		#/bin/sed -i '/users.1.password/d' /tmp/system.cfg; echo "users.1.password=$CP" >> /tmp/system.cfg
+		#cfgmtd -w -p /etc/ && reboot
+
+
+
+	out=$(echo $?)
+
+	if [[ $out = 1 || $out = 255 ]]; then
+		$(connectSSHp7722 "$1" "$2" "$3" << OEF
+(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
+sed -i "s/users.1.password=.*/users.1.password="$(cat /etc/passwd | cut -d: -f2)"/" /tmp/system.cfg
+cfgmtd -w -p /etc/ && reboot
+OEF
+)
+	fi
+
+	echo $out
+unset out
+}
 
 
 
