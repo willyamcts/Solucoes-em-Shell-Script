@@ -1,0 +1,170 @@
+source ./chk/handling.ch ./command/functions.exe
+
+# Contem somente as caixas de dialogo com as informacoes necessarias;
+
+
+	# Verifica retorno de erro zenity;
+warningReturn() {
+
+	case $1 in
+		1 | default) clear && kill -9 $$ 1>&2>/dev/null
+			;;
+	esac
+}
+
+
+	# Funcao principal, contendo menu de opcoes;
+selectFunction() {
+
+option1='Update MikroTik'
+option2='Update Ubiquiti'
+
+	FSELECT=$(zenity --width=450 --height=400 \
+		--list --title="Atualização de equipamentos" --text="Selecione o equipamento:" \
+			--radiolist --column "Check" --column "Funções" \
+				FALSE "$option1" TRUE "$option2")
+
+	warningReturn $?
+
+	verifyOption "$FSELECT"
+}
+
+
+
+	# Seleciona o modo de execucao, por address list ou range de IP;
+selectModeExecution() {
+
+	MOD=$(zenity --width=200 --height=150 \
+		--list --title="Modo exec." --text="Selecione o modo de execução:" \
+			--radiolist --column "" --column="Mode" \
+				TRUE "Range de IP" FALSE "Address list")
+
+	warningReturn $?
+
+	verifyModeExec "$MOD" "addressEntry" "selectFile" 
+
+	# Chamada de funcao handling para executar dataAccess
+	handData "dataAccess" 0
+
+}
+
+
+#TODO: Rever a necessidade do case;
+	# Seleciona o arquivo a ser lido por funcoes posteriores;
+selectFile() {
+
+FILE=$(zenity --file-selection --title="Selecione o arquivo\
+	contendo os enderecos IP")
+
+	case $? in
+		0) zenity --info --width=275 --height=130 \
+				--text="\nArquivo selecionado: \n\n $FILE\n"
+			modeFunction='handFileToAccess "$FILE"'
+			;;
+
+		1) zenity --warning \
+				--text="\nNenhum arquivo selecionado."
+			exit 10
+			;;
+
+		-1) zenity --error \
+			--text="\nOcorreu algum erro. Reexecute a aplicaçao"
+			$0
+			;;
+	esac
+}
+
+
+
+saveFiles() {
+
+	dstFILES=$(zenity --file-selection --directory \
+		--title="Salvar arquivos de backup em: ")
+
+	case $? in
+		1) zenity --warning --width=400 --height=100 \
+			--text="\nNenhum diretório de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			dstFILES="~/backup-$(date +%d%m%Y_%H%M)"
+			;;
+	esac
+
+echo "$dstFILES"
+unset dstFILES
+}
+
+
+	# Seleciona/cria um arquivo para salvar um relatorio;
+saveFileReport() {
+
+	toFILE=$(zenity --file-selection --filename=/tmp/log.txt --save --confirm-overwrite \
+		--title="Salvar relatorio de saida em: ")
+
+	case $? in
+		1) zenity --warning --width=400 --height=100 \
+			--text="\nNenhum arquivo de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			toFILE='/tmp/log.txt'
+			;;
+	esac
+}
+
+
+
+	# Recebe os dados de acesso ao equipamento;
+dataAccess() {
+	UaP=$(zenity --title="Usuário e senha dos dispositivos" \
+		--password --username)
+
+	warningReturn $?
+
+	echo $(echo $UaP | cut -d'|' -f1)+$(echo $UaP | cut -d'|' -f2)
+	unset UaP
+}
+
+
+
+	# Recebe endereco IP inicial e final
+addressEntry() {
+
+	modeFunction=handAddressToAccess
+
+IP=$(zenity --forms --title="Defina a range de endereços" --width=320 --height=150 \
+	--text="Informe a range de IP" --separator="," \
+		--add-entry="IP inicial:" \
+		--add-entry="IP final:" )
+
+	warningReturn $?
+
+	checkOcteto "$IP" "addressEntry"
+}
+
+
+#########################################################
+############## Extras - Novas funcoes >>> ###############
+
+
+currentVersion() {
+
+	BUILD=$(zenity --forms --title="Versões dos firmwares" --text="Informe a versão atual do firmware: " --separator="," \
+		--add-entry="AirMAX M: v" --add-entry="AirMAX AC: v" )
+
+	warningReturn $?
+
+	buildM=$(echo $BUILD | cut -d, -f1)
+	buildAC=$(echo $BUILD | cut -d, -f2)
+
+}
+
+URLFirmwares() {
+
+	VERSIONS=$(zenity --forms --title="URL download firmwares" --text="Entre com a URL para cada firmware:" --separator="," \
+			--add-entry="AirMAX M XM (HTTP): " --add-entry="AirMAX M XW (HTTP): " --add-entry="AirMAX AC WA (HTTP): " --add-entry="AirMAX AC XC (HTTP): ")
+
+	warningReturn $?
+
+	xm=$(echo $VERSIONS | cut -d, -f1)
+	xw=$(echo $VERSIONS | cut -d, -f2)
+	wa=$(echo $VERSIONS | cut -d, -f3)
+	xc=$(echo $VERSIONS | cut -d, -f4)
+
+	unset BUILD VERSIONS
+}
