@@ -1,0 +1,11 @@
+
+# Verifica se o $ip está ativo e envia-os ao arquivo definido em $arcAddress
+#	 via ICMP, enviando 2 pacotes somente de com 1 byte.
+verifyAddressReply(){
+
+	ping -c2 -s0 $ip
+	if [ $? = 0 ]; then
+		echo $ip >> $arcAddress
+	fi
+
+}

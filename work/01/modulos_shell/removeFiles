@@ -1,0 +1,28 @@
+# Exclui arquivos criados da execução anterior e restrição de acesso SSH
+excluirArquivos(){
+
+	# Remove arquivo SSH
+	if [ -e ~/.ssh/known_hosts ]; 
+		rm -f ~/.ssh/known_hosts
+	fi
+
+
+	# Remove arquivo de enderecos;
+	if [ -e $arcAddress ] ; then
+		rm $arcAddress
+	fi
+
+
+	# Acrescenta ao arquivo de log data da execucao;
+	if [ -e $arcLog ]; then
+		echo " " >> $arcLog
+		echo "	==== `date +%D" "%H:%M` ====	" >> $arcLog
+	fi
+
+
+	# Remove script criado;
+	if [ -e $scriptFile ]; then
+		rm -f $scriptFile
+	fi
+
+}

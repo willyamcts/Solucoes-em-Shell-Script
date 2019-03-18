@@ -1,0 +1,33 @@
+
+
+read ip
+read ipF
+
+oct=( $(echo $ip | cut -d. -f1) $(echo $ip | cut -d. -f2) \
+	$(echo $ip | cut -d. -f3) $(echo $ip | cut -d. -f4) )
+
+
+octF=( $(echo $ipF | cut -d. -f1) $(echo $ipF | cut -d. -f2) \
+	$(echo $ipF | cut -d. -f3) $(echo $ipF | cut -d. -f4) )
+
+
+#####################################################################################
+#####################################################################################
+
+	# Range de IPs
+	for ((o1="${oct[0]}"; $o1 <= ${octF[0]}; o1++)); do
+
+		for ((o2="${oct[1]}"; $o2 <= ${octF[1]}; o2++)); do
+
+			for ((o3="${oct[2]}"; $o3 <= ${octF[2]}; o3++)); do
+
+				for ((o4="${oct[3]}"; $o4 <= ${octF[3]}; o4++)); do
+
+					IP="$o1.$o2.$o3.$o4"
+
+					 ## COMMAND ##
+
+				done
+			done
+		done
+	done

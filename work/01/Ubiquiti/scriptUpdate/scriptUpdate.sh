@@ -3,30 +3,48 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 12/2016;
+# Data: 19/12/2016;
 #
 # Descrição: Faz atualização de firmware de dispositivos Ubiquiti 5.8 GHz.
-#	Alterar linha 43 e arquivo contentMainBlock.part.
+#	Alterar linha 64 e arquivo contentMainBlock.part.
 
 
 source contentExecution.part
 source contentMainBlock.part
 
-#	TODO: - esconder saida "nohup";
-#	- Saida do arquivo output, colocar IPs em sequencia, nao em linha
-#	- Remover arquivos no fim, nohup.out, .process.kill, .script.sh
-
-#	TODO: Aplicar em um unico script alterar nome do arquivo address.txt
-
 # v16 = Incrementando runtime e data e hora da execucao no arq. report.out
+# v18 = Manipulacao arquivos via variavel; Possivel alterar porta SSH;
+#	Informa faixa sendo escaneada;
+#	- Corrigido: Script kill SSH executando indevidamente;
+# v19 =
 
 
+#	- Corrigido: Erro de relatorio - numero de equipamentos nao atualizados ou nao
+#  alcancados;
+#	- Lista sequencial de IPs nao atualizados;
+# 	- Kill na sessao SSH executando normalmente, finalizando script
+#	  killSession no tempo correto, sem interromper sessoes posteriores;
+#	- Erro na instalacao do pacote SSHPass, caso nao realize atualizacao de pacotes
+#	  apresneta erro e finaliza execucao;
+
+
+# Verificar quantos dispositivos respondem, se for maior que 50, remover os sleep;
+#	- Remover arquivos no fim, nohup.out, .process.kill, .script.sh;
+
+
+# Overviewer:
 #	Verifica IPs ativos na rede e adiciona a um arquivo na
 #	pasta temporaria; realizado leitura do arquivo, fazendo chamada
 #	da funcao comandoUpdate; Apos update faz a verificacao de IPs com versao
 #	do firmware, equipamentos com versao fora da atual sao reiniciados e apos
 #	2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
 #	gera um relatorio simples de execucao presente em ./ouput.txt;
+
+
+arcAddress='/tmp/address_responding.txt'
+arcReport='./report.out'
+arcLog='/tmp/log_update.out'
+
 
 # Chamada de blocos essenciais para execução.
 blocoPrincipal(){
@@ -37,25 +55,29 @@ blocoPrincipal(){
 	# chamada da funcao;
 	checkSSHPackage
 
-	# Range de IPs
-#	for ip in 192.168.2.1 ; do
-#	for ip in $oct1.$oct2.$oct3.{10..254} ; do
-	for ip in $oct1.{1..254}.{76..79}.{1..254} ; do
-#	for ip in $oct1.{1..254}.{1..254}.{1..254} ; do
+	if [ $? = 11 ]; then
+		kill -9 $$
+		exit
+	fi
 
-		# chamada da funcao verifica IPs que respondem
-		#	sem retorno em tela;
-		verificaRespostaIP > /dev/null &
+	# Range de IPs
+	for ip in $oct1.{76,79}.{254..170}.{5..254} ; do
+#	for ip in $oct1.{76,79}.{3..70}.{5..254} ; do
+#	for ip in $oct1.{76,78,79}.{42,40,74,73,3}.{5..254} ; do
+		# chamada da funcao verifica IPs ativos;
+		verifyAddressReply > /dev/null &
+
+		# Saida em tela, informando qual faixa esta verificando
+		addr=`echo $ip | cut -d. -f4`
+		if [ $addr = 0 ]; then
+			clear; echo
+			echo " 		Verificando IPs da faixa [ $ip/24 ] "
+		fi
 
 	done
 
-
-
-#TODO: Teste
-cp /tmp/address_responding1.txt ./add1.txt
 	date=`date +%H:%M" - "%d/%m/%Y`
-	pwd=`pwd`
-	creatingScript $currentVersion > /tmp/.script.sh
+	creatingScript $CURRENTVERSION > /tmp/.script.sh
 
 }
 
@@ -64,15 +86,15 @@ cp /tmp/address_responding1.txt ./add1.txt
 blocoDeExecucao(){
 
 	# quantidade de linhas do arquivo /tmp/address_responding;
-	qtLinhas=`wc -l "$archive" | cut -d " " -f1`
+	qtLines=`wc -l $2 | cut -d " " -f1`
 
 	# respectivo IP presente na linha;
-	for ((linhaAtual=1; "$linhaAtual" <= "$qtLinhas"; linhaAtual++)); do
+	for ((linhaAtual=1; $linhaAtual <= $qtLines; linhaAtual++)); do
 
 		delArchiveSSH
 
 		# recebe IP da linha especifica
-		ip=`sed -n "$linhaAtual"'p' "$archive"`
+		ip=`sed -n $linhaAtual'p' $2`
 
 		sleep 3
 		# Chama função com bloco de comandos a executar;
@@ -85,23 +107,12 @@ blocoDeExecucao(){
 
 # Verifica IPs ativos na rede e envia-os ao arquivo /tmp/address_responding.txt
 #	 via ICMP, 2 pacotes somente.
-verificaRespostaIP(){
+verifyAddressReply(){
 
 	ping -c 2 $ip
 	if [ $? = 0 ]; then
-		echo $ip >> /tmp/address_responding.txt
+		echo $ip >> $arcAddress
 	fi
-
-}
-
-
-# Comando SSH
-commandSSH(){
-echo "Branco"
-	# Necessario passagem do paametro $command - executa no eq.
-#	ssh='sshpass -p "$password" ssh "$user"@"$ip" << EXIT
-#		$comand
-#	EXIT
 
 }
 
@@ -109,83 +120,68 @@ echo "Branco"
 # Finaliza processo SSH local apos 5min da sessao iniciada ou ate equipamento
 #	deixar de responder.
 
-#TODO: Alterar para Do While e remover as 2 primeiras linhas
 killSession(){
-echo 'date=`echo \`date +%s\` + '420' | bc`'
-echo '	until [ `date +%s` -eq $date ]; do'
-echo "		ping -c2 $ip"
+date=`echo \`date +%s\` + '540' | bc`
+	until [ `date +%s` -eq $date ]; do
+		ping -c2 $ip
 
-echo '		if [ $? != 0 ]; then'
-echo "			killall ssh"
-#echo "			rm $pwd/nohup.out"
-echo "			exit"
-echo "			return 0"
-echo "		fi"
-echo "	done"
+		if [ $? != 0 ]; then
+			killall sshpass > /dev/null
+			exit 0
+		fi
+	done
 
-echo "	killall ssh"
-#echo "	rm $pwd/nohup.out"
-#echo "	return 0"
+	killall sshpass > /dev/null
+	exit 0
+
 }
 
 
 # 1- Bloco execução, envia script e o executa no equipamento.
 comandoUpdate(){
-	killSession > /tmp/.process.kill
-	chmod +x /tmp/.process.kill
-# TENTAR CHAMAR SEM NOHUP, PARA EVITAR PROBLEMAS
-#	nohup /tmp/.process.kill & > /dev/null
-	/tmp/.process.kill 1 > /dev/null&
 
 	echo; echo
-	sshpass -p "$password" scp -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh "$user"@"$ip":/tmp/script.sh
+	sshpass -p $PASSWORD scp -P $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" /tmp/.script.sh $USER@$ip:/tmp/script.sh > /dev/null
 	retorno=$?
 
 	# Verfica erro na transferencia via SCP;
-	if [ "$retorno" != 0 ] ; then
+	if [ $retorno != 0 ] ; then
 		content="Falha ao enviar script, $retorno"
 
 	else
-		delArchiveSSH
 
-		sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'chmod +x /tmp/script.sh; /tmp/script.sh'
+		killSession > /dev/null &
+		PIDKSSH=$!
+
+		delArchiveSSH; sleep 1
+
+		sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'chmod +x /tmp/script.sh; /tmp/script.sh'
 		retorno=$?
-		if [ "$retorno" != 0 ] ; then
-			content="Falha conexão SSH, $retorno"
-		fi
 
-#	command='chmod +x /tmp/script.sh; /tmp/script.sh'
-#	echo "commandSSH
-#	commandSSH
+		content="Falha conexão SSH, $retorno"
+#		content=$retorno
+
+		# Kill sessao SSH
+		kill -9 $PIDKSSH > /dev/null &
 
 	fi
 
-	echo "$ip	$content" >> /tmp/log_update.txt
+	echo "$ip	$content" >> $arcLog
 }
-
 
 
 # 1- Bloco execução,
 accessVersion(){
 	delArchiveSSH
 
-	clear; echo "		Verificando versão dos equipamentos...."
-	echo -e "\n\n	$ip"
+	clear; echo; echo
+	echo "		Verificando versão de $ip"
 
-	version=`sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'cat /etc/version | cut -d"v" -f2'`
-	echo "$version"
+	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
 
-#	command='cat /etc/version | cut -d"v" -f2'
-#	version=`commandSSH`
 	echo "$ip	$version" >> /tmp/updates.txt
 }
 
-
-# Desuso - introduzido verificacao de restos de arquivos no script
-#  enviado ao eq.
-#rebootDevices(){
-#	sshpass -p "$password" ssh -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" "$user"@"$ip" 'reboot'
-# }
 
 
 runtime(){
@@ -193,27 +189,29 @@ runtime(){
 	addition=`expr $finalDate - $initialDate`
 	result=`expr 10800 + $addition`
 	runtime=`date -d @$result +%H:%M:%S` #tempo
-	echo " Tempo gasto: $runtime"
+	echo "  Tempo gasto: $runtime"
 }
 
 
 buildReport() {
-	archive="/tmp/address_responding.txt"
-	blocoDeExecucao accessVersion
+	blocoDeExecucao accessVersion $arcAddress
 
 	# Info eq. fora da versão atual;
-#	manualUpdate=`grep -v "$currentVersion" /tmp/address_responding.txt | cut -f1 | wc -l`
-	manualUpdate=`grep -v "$currentVersion" /tmp/updates.txt | cut -f1 | wc -l`
+	manualUpdate=`grep -v $CURRENTVERSION /tmp/updates.txt | cut -f1 | wc -l`
 
-	if [ -e ./report.out ] ; then
-		echo >> ./report.out
-		echo "	=============== $date ================== " >> ./report.out
+	if [ -e $arcReport ] ; then
+		echo >> $arcReport
+		echo -e "	\n=============== $date ================== " >> $arcReport
 	fi
 
-	clear; echo "			REPORT FINAL:	" >> ./report.out
-	echo " $manualUpdate equipamento(s) não atualizado(s) de $qtDevices.	" >> ./report.out
-	cat /tmp/address_responding.txt >> ./report.out
-	runtime >> ./report.out
+	clear; echo -e "\n			REPORT FINAL:	\n  $manualUpdate equipamento(s) não atualizado(s) de $qtDevices.	" >> $arcReport
+
+	for i in `cat $arcAddress`; do
+			echo -n "$i " >> $arcReport
+	done
+
+	echo >> $arcReport
+	runtime >> $arcReport
 }
 
 
@@ -224,37 +222,44 @@ clear
 initialDate=`date +%s`
 
 echo "Informe nome do usuario padrao de acesso aos equipamentos: "
-read user
+read USER
 
 echo; echo "Informe a senha de acesso aos equipamentos: "
-read -s password; echo
+read -s PASSWORD
 
-echo; echo "Informe o IP: (será considerado /16) "
-read ip
+echo; echo "Informe o IP: "
+read IP
 
-echo; echo "Informe a versão atual do firmware: "
-read currentVersion
+echo; echo "Informe a versão atual do firmware: [ex. 5.6.8] "
+read CURRENTVERSION
+#CURRENTVERSION='5.6.9'
 
-echo; echo "Informe o link completo para download do firmware $currentVersion: "
-read addressFirmwareDown
+echo; echo "SSH port[22]: "
+PORTSSH='22'
+read PORTSSH
 
+#echo; echo "Informe o link completo para download do firmware $currentVersion: "
 
-oct1=`echo $ip | cut -d. -f1`; oct2=`echo $ip | cut -d. -f2`
-oct3=`echo $ip | cut -d. -f3`; oct4=`echo $ip | cut -d. -f4`
+#echo "Versao XM: "
+#read URLFIRMXM
+
+#echo "Versao XW: "
+#read URLFIRMXW
+
+oct1=`echo $IP | cut -d. -f1`; oct2=`echo $IP | cut -d. -f2`
+oct3=`echo $IP | cut -d. -f3`; oct4=`echo $IP | cut -d. -f4`
 
 sleep 3; clear; echo
 echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
 	blocoPrincipal
 
+sleep 60
 	# Verifica existencia de IPs ativos e inicia Upgrade;
 	sleep 3; clear; echo
-	if [ -e /tmp/address_responding.txt ]; then
+	if [ -e $arcAddress ]; then
 		echo "			Iniciando sessões SSH	"; sleep 3; echo
-		archive="/tmp/address_responding.txt"
-		blocoDeExecucao comandoUpdate
-		qtDevices=$qtLinhas
-#TODO: Teste
-cp /tmp/log_update.txt ./log1
+		blocoDeExecucao comandoUpdate $arcAddress
+		qtDevices=$qtLines # Quantidade dispositivos
 	else
 		echo "		Nenhum IP da faixa especificada está ativo."
 		exit
@@ -264,37 +269,30 @@ cp /tmp/log_update.txt ./log1
 # Tratamento de equipamentos que nao foram atualizados no primeiro
 #  comando, inicia aqui!;
 
-
 # Time 30s
 	for temp in {30..1}; do
-#		echo; echo; echo "	Iniciando segunda tentativa de update, aguarde... $temp"s""
 		echo; echo; echo "			Aguarde... $temp"s""
 		sleep 1; clear
 	done
 
 
 # 2.1 - Verifica a versao dos equipamentos;
-	archive="/tmp/address_responding.txt"
-# TODO: Estava duplicando IPs no fim - para executar a 2a vez, introduzido com abaixo
 	if [ -e /tmp/updates.txt ]; then
 		rm /tmp/updates.txt
 	fi
-	blocoDeExecucao accessVersion
-
-#TODO: Teste
-cp /tmp/updates.txt ./up1.txt
 
 
 
-#TODO: Teste
-		grep -v "$currentVersion" /tmp/updates.txt | cut -f1 > /tmp/address_responding.txt
-#TODO: Teste
-cp /tmp/updates.txt ./up2.txt
-cp /tmp/address_responding.txt ./add2.txt
-		rm /tmp/updates.txt; sleep 5
+	blocoDeExecucao accessVersion $arcAddress
 
+
+echo "GREP -V " >> $arcLog
+		grep -v $CURRENTVERSION /tmp/updates.txt | cut -f1 > $arcAddress
+		rm /tmp/updates.txt
+
+echo "IF abaixo de GREP -V" >> $arcLog
 	# 2.2 - Se conteudo do arquivo address nao for vazio;
-	if [ -n "`cat /tmp/address_responding.txt`" ]; then
+	if [ -n `cat $arcAddress` ]; then
 
 		for temp in {90..1}; do
 			clear; echo; echo
@@ -304,13 +302,10 @@ cp /tmp/address_responding.txt ./add2.txt
 
 		# 2.2.2 - Se o arquivo address possuir conteudo ira chamar blockExecution para
 		#  executar bloco commandUpdate;
-		if [ -e /tmp/address_responding.txt ]; then
+		if [ -e $arcAddress ]; then
 # TODO: colocar quantidade $x;
-			clear; echo "		Iniciando atualizacoes dos $x eq. restantes"
-			archive="/tmp/address_responding.txt"
-			blocoDeExecucao comandoUpdate
-#TODO :Teste
-cp /tmp/log_update.txt ./log2
+			clear; echo "		Iniciando atualizacoes dos x eq. restantes"
+			blocoDeExecucao comandoUpdate $arcAddress
 		fi
 
 
@@ -324,28 +319,20 @@ cp /tmp/log_update.txt ./log2
 
 
 	# Removendo arquivos
-	rm /tmp/.script.sh /tmp/.process.kill;
+	rm /tmp/.script.sh
 
 
 # 2.3 - Verifica a versao dos equipamentos - 2a vez;
 	if [ -e /tmp/updates.txt ]; then
-# TODO: Teste2
-cp /tmp/updates.txt ./up3
 		rm /tmp/updates.txt
 	fi
 
-# TODO: Teste2
-cp /tmp/updates.txt ./up4
-
-	archive="/tmp/address_responding.txt"
-	blocoDeExecucao accessVersion #& > /dev/null
-# TODO: Teste2
-cp /tmp/updates.txt ./up5
-echo " Em segundo plano" >> ./up5
+#TODO: redundandte - exitente em buildReport
+#	blocoDeExecucao accessVersion $arcAddress #& > /dev/null
 
 # 3 - Gera relatorio e exibe o mesmo
 buildReport
-cat ./report.out
+cat $arcReport
 
 
 # Apos verificacao, pega IPs que nao foram atualizados e

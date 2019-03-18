@@ -20,13 +20,14 @@ selectFunction() {
 
 option1='Backup MikroTik'
 option2='Backup Ubiquiti'
-option3='Create ComplianceTest massive'
-option4="Endereços ativos"
-option5='Report devices Ubiquiti (Client-Full)'
+option3='Change channel massive'
+option4='Create ComplianceTest massive'
+option5="Endereços ativos"
+option6='Report devices Ubiquiti (Client-Full)'
 
 	FSELECT=$(zenity --width=450 --height=400 \
-		--list --title="Funções" --text="O que deseja fazer? " \
-			--radiolist --column "Check" --column "Função" \
+		--list --title="Functions" --text="O que deseja fazer? " \
+			--radiolist --column "Check" --column "Function" \
 				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4" FALSE "$option5")
 
 	warningReturn $?
@@ -140,4 +141,24 @@ IP=$(zenity --forms --title="Defina a range de endereços" --width=320 --height=
 	warningReturn $?
 
 	checkOcteto "$IP" "addressEntry"
+}
+
+
+infoChangeChannels(){
+	zenity --question --width=450 --height=120 --title="WARNING!" \
+		--text="Caso o DFS do equipamento esteja ativo, será desativado. A lista de rastreio só vai conter o(s) canal(is) informado(s) na próxima etapa.\
+			\n\n Deseja continuar?"
+
+	warningReturn $?
+}
+
+
+
+entryChannels() {
+
+	zenity --entry --title="" \
+		--text="Entre com o canal desejado, caso seja mais de um separe-os por vírgula, sem espaçamentos: "
+
+	warningReturn $?
+
 }

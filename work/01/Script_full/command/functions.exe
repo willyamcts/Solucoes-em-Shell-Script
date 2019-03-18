@@ -9,7 +9,6 @@
 ##### FUNCOES PADROES PARA ACESSO VIA SSH - USO: #####
 #						     #
 #	$(connectSSHp22 "$1" "$2" "$3" '[comandos]' )#
-######################################################
 
 # Padrao conexao SSH na porta 22
 connectSSHp22() {
@@ -98,16 +97,33 @@ echo "NÃO IMPLEMENTADA"
 
 
 
+changeChannel(){
+
+	command='[ $(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && (echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg; sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg) || (sed -i 's/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels="$4"/' /tmp/system.cfg); cfgmtd -w -p /etc/; reboot'
+
+	$(connectSSHp22 "$1" "$2" "$3" '"$command"')
+	out=$(echo $?)
+
+		if [ $out -eq 255 ] || [ $out -eq 1 ]; then
+
+			$(connectSSHp7722 "$1" "$2" "$3" '"$command"')
+			out=$(echo $?)
+		fi
+
+	echo $out
+unset out
+}
+
+
+
 massiveCompliance() {
 
 	$(connectSSHp22 "$1" "$2" "$3" 'cat /etc/persistent/ct && exit 10 || (touch /etc/persistent/ct; cfgmtd -w -p /etc/; reboot)')
-
 	out=$(echo $?)
 
 	if [ $out -eq 255 ] || [ $out -eq 1 ]; then
 
 		$(connectSSHp7722 "$1" "$2" "$3" 'cat /etc/persistent/ct && exit 10 || (touch /etc/persistent/ct; cfgmtd -w -p /etc/; reboot)')
-
 		out=$(echo $?)
 	fi
 

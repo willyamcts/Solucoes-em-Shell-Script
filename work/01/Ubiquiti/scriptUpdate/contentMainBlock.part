@@ -1,11 +1,15 @@
+# Caso o diretorio /tmp/ do equipamento seja maior que 100k vai reinicia-lo
+
 # Cria arquivo script que sera importado para equipamento;
 creatingScript() {
 echo "#!/bin/sh"
 
-echo 'size=`du -hsm /tmp/ | awk '\'{print '$1'}''\''`'
+echo 'rm -f $0'
+
+echo 'size=`du -hsk /tmp/ | awk '\'{print '$1'}''\''`'
 #echo 'size=`du -hsm ./ | cut -f1`'
 
-echo 'if [ $size -ge 1 ]; then'
+echo 'if [ $size -gt 100 ]; then'
 echo '	reboot'
 echo '	return 10'
 
@@ -19,11 +23,13 @@ echo "		cd /tmp"
 
 echo '		if [ "$versao" == "XM" ]; then'
 echo "			URL='http://meuftp.com/down.php?id=23'"
+#echo "			URL='$2'"
 echo '			wget -c $URL'
 echo "			mv /tmp/down.php?id=23 /tmp/v$1.bin"
 
 echo "		else"
 echo "			URL='http://meuftp.com/down.php?id=24'"
+#echo "			URL='$3'"
 echo '			wget -c $URL'
 echo "			mv /tmp/down.php?id=24 /tmp/v$1.bin"
 echo "		fi"

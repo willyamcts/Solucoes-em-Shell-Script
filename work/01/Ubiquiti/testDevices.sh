@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 10/04/2017;
+# Data: 20/04/2017;
 #
 # Descrição: Registra MAC do dispositivo ao selecionar o modelo, para fins de 
 #	teste de bom funcionamento do dispositivo;
@@ -21,7 +21,7 @@ DEVICE=$(zenity --width=450 --height=300 \
 			FALSE "NanoBeamM2 400" FALSE "NanoBeam M5 16" FALSE "NanoBeam M5 300" FALSE "Nano Bridge M5" FALSE "Nano Bridge M900" \
 			FALSE "Nano Station2" FALSE "Nano Station5" FALSE "NanoStation5 Loco"  FALSE "NanoStation Loco M5" FALSE "NanoStation M5" \
 			FALSE "PowerBeam M5 300" FALSE "PowerBeam M2 400" FALSE "PowerBeam 5AC 300" FALSE "PowerBeam 5AC 400" FALSE "PowerBeam 5AC 500" FALSE "PowerBeam 5AC 620" \
-			FALSE "PicoStation M2" FALSE "PowerBridge M10" FALSE "Rocket 5AC Lite" FALSE "Rocket M3" FALSE "Rocket M5" FALSE "Rocket Titanium")
+			FALSE "PicoStation M2" FALSE "PowerBridge M10" FALSE "Rocket 5AC Lite" FALSE "Rocket M3" FALSE "Rocket M5" FALSE "Rocket Titanium") 1>&2>/dev/null
 
 case $? in 
 	1) kill -9 $$
@@ -29,19 +29,27 @@ case $? in
 esac
 
 
+dstFile="testados_$(date +%d-%m)"
 
-ping -s1 -c2 192.168.1.20 > /dev/null
+
+ping -s1 -c2 192.168.1.20 1>&2>/dev/null
 
 if [ $? = 0 ]; then
 	mac=$(arp -a 192.168.1.20 | cut -d" " -f4)
-	printf "%s\t%s\n" "$DEVICE" "$mac" >> "testados_$(date +%d-%m)"
+	printf "%s\t%s\n" "$DEVICE" "$mac" >> "$dstFile"
 
 else	
 	mac=$(arp -a 192.168.2.1 | cut -d" " -f4)
-	client=$(sshpass -p "$password" ssh -p22 -o 'StrictHostKeyChecking no' "$user"@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') || $(sshpass -p7722 -o 'StrictHostKeyChecking no' "$user"@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 
+	client=$(sshpass -p "$password" ssh -p22 -o 'StrictHostKeyChecking no' "$user"@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
 
-	printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "testados_$(date +%d-%m)"
+	if [ $? != 0 ]; then
+		client=$(sshpass -p "$password" ssh -p7722 -o 'StrictHostKeyChecking no' "$user"@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+	fi
+
+	printf "%s\t%s\t%s\n" "$DEVICE" "$mac" "$client" >> "$dstFile"
 
 fi
+
+	[[ $? = 0 ]] && clear && tail -n1 "$dstFile"
 
 $0

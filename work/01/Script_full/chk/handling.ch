@@ -15,12 +15,16 @@ verifyOption() {
 			# Utilizar variavel dstFILES que contem o diretorio a ser salvo os backups.
 			dstFILES=$(saveFiles "ARG1")
 			;;
-		"$option3") mainFunction=massiveCompliance
+		"$option3") mainFunction=changeChannel
+			infoChangeChannels
+			channels=$(entryChannels "ARG1")
 			;;
-		"$option4") mainFunction=activeAddress
+		"$option4") mainFunction=massiveCompliance
+			;;
+		"$option5") mainFunction=activeAddress
 			unset handData
 			;;
-		"$option5") mainFunction=deviceFullReport
+		"$option6") mainFunction=deviceFullReport
 			;;
 	esac
 }
@@ -180,6 +184,10 @@ echo "LINHA 168: RETURN=$return" #TODO: Teste
 echo "LINHA 168: RETURN=$return" #TODO: Teste
 
 			makeReport "$1" "$return" "$deviceName" TODO:Remover comentario
+
+		elif [ $(echo $mainFunction | grep changeChannel) ]; then
+			return=$($mainFunction "$user" "$pass" "$1" "$channels" "ARG1")
+			makeReport "$1" "$return"
 
 		else
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")

@@ -6,21 +6,21 @@ checkSSHPackage(){
 	if [ "$status" != "install" ] ;then
 
 		clear
-		echo; echo "Instalando pacote SSHPass..."
-		apt-get update > /dev/null &
-		sleep 5
+		echo; echo "	Instalando pacote SSHPass..."; sleep 5
+		apt-get update
 
 		# caso ocorra erro na atualizacao dos pacotes,
 		#  finaliza execucao do script;
 		if [ $? != 0 ]; then
-			clear
-			echo "Verifique a conexao com a internet e atualize"
-			echo "	sua lista de pacotes..."
-			exit
-		fi
+			clear; echo
+			echo -e "	Verifique a conexao com a internet e atualize sua lista de pacotes..."
+			exit 11
+		else
 
-		apt-get install sshpass -y > /dev/null &
+			apt-get install sshpass -y > /dev/null &
+		fi
 	fi
+
 }
 
 
@@ -39,8 +39,8 @@ removeFiles(){
 	delArchiveSSH
 
 	# Remove arquivo de enderecos;
-	if [ -e /tmp/address_responding.txt ] ; then
-		rm /tmp/address_responding.txt
+	if [ -e $arcAddress ] ; then
+		rm $arcAddress
 	fi
 
 	# Remover arquivo contem os IP e ID das RBs;
