@@ -462,8 +462,18 @@ servicesPorts() {
 
 		fi
 
+
+## TODO: Estrutura de comando correto:
+#		connectSSHp22 $1 $2 $3 << OEF 
+#			cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+#			$command
+#			sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+#			cfgmtd -w -p /etc && reboot
+#OEF
+
+
 		connectSSHp22 $1 $2 $3 << OEF 
-			cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep sshd.port | wc -l) -eq 1 ] || (sed -i 's/sshd.port=.*//g' /tmp/system.cfg && echo 'sshd.port=7722' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.port= | wc -l) -eq 1 ] || (sed -i 's/httpd.port=.*//g' /tmp/system.cfg && echo 'httpd.port=80' >> /tmp/system.cfg)
@@ -479,7 +489,7 @@ OEF
 
 		if [[ $out = 1 || $out = 255 ]]; then
 			connectSSHp7722 $1 $2 $3 << OEF 
-				cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep sshd.port | wc -l) -eq 1 ] || (sed -i 's/sshd.port=.*//g' /tmp/system.cfg && echo 'sshd.port=7722' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.port= | wc -l) -eq 1 ] || (sed -i 's/httpd.port=.*//g' /tmp/system.cfg && echo 'httpd.port=80' >> /tmp/system.cfg)
@@ -494,7 +504,7 @@ OEF
 
 			if [[ $out = 1 || $out = 255 ]]; then
 				connectSSHp22Diffie $1 $2 $3 << OEF
-					cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep sshd.port | wc -l) -eq 1 ] || (sed -i 's/sshd.port=.*//g' /tmp/system.cfg && echo 'sshd.port=7722' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.port= | wc -l) -eq 1 ] || (sed -i 's/httpd.port=.*//g' /tmp/system.cfg && echo 'httpd.port=80' >> /tmp/system.cfg)
@@ -509,7 +519,7 @@ OEF
 
 				if [[ $out = 1 || $out = 255 ]]; then
 					connectSSHp7722Diffie $1 $2 $3 << OEF
-					cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
 sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep sshd.port | wc -l) -eq 1 ] || (sed -i 's/sshd.port=.*//g' /tmp/system.cfg && echo 'sshd.port=7722' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.port= | wc -l) -eq 1 ] || (sed -i 's/httpd.port=.*//g' /tmp/system.cfg && echo 'httpd.port=80' >> /tmp/system.cfg)
