@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 30/05/2017;
+# Data: 01/06/2017;
 #
 # Descrição: Registra MAC do dispositivo ao selecionar o modelo, para fins de 
 #	teste de bom funcionamento do dispositivo. Funciona em dispositivos 
@@ -14,16 +14,25 @@
 #	Adiciona Compliance Test ao equipamento.
 
 
+# FUNCAO: Verifica o MAC do dispositivo ao selecionar o modelo;
+#	- Por meio do ping, verifica qual IP responde 1.20 ou 2.1 e verifica o MAC
+#	- Verificado o MAC, o modelo selecionado na lista e o MAC sao adicionados ao 
+#		arquivo "testadados_[DIA-MES]" do diretório atual
+
+
+# ERRORS: Equipamento respondendo em 1.20, a execucao cria o CT mas nao considera se tem a necessidade de atualizar o equipamento.
+#	Correcao: Eq. respondendo em 1.20 > Print eq. mac e versao > solicitar se deseja criar o CT
+
 
 sshUBNT() {
-	sshpass -p 'ubnt' ssh -p22 -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 $1
+	sshpass -p 'ubnt' ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 $1
 }
 
 
 ## Em cada execucao vai abrir 2 novos terminais, tratar para serem encerrados ao finalizar a execução
-#if [ -z $1 ]; then
-#	xterm -x bash -c 'ping 192.168.1.20' && xterm -x bash -c 'ping 192.168.2.1' || x-terminal-emulator -x bash -c 'ping 192.168.1.20' && x-terminal-emulator -x bash -c 'ping 192.168.2.1' || xfce4-terminal -x bash -c 'ping 192.168.1.20' && xfce4-terminal -x bash -c 'ping 192.168.2.1' || konsole -x bash -c 'ping 192.168.1.20' && konsole -x bash -c 'ping 192.168.2.1' || lxterminal -x bash -c 'ping 192.168.1.20' && lxterminal -x bash -c 'ping 192.168.2.1'
-#fi
+if [ -z $1 ]; then
+	xterm -x bash -c 'ping 192.168.2.1' && xterm -x bash -c 'ping 192.168.1.20' || x-terminal-emulator -x bash -c 'ping 192.168.2.1' && x-terminal-emulator -x bash -c 'ping 192.168.1.20' || xfce4-terminal -x bash -c 'ping 192.168.2.1' && xfce4-terminal -x bash -c 'ping 192.168.1.20' || konsole -x bash -c 'ping 192.168.2.1' && konsole -x bash -c 'ping 192.168.1.20' || lxterminal -x bash -c 'ping 192.168.2.1' && lxterminal -x bash -c 'ping 192.168.1.20'
+fi
 
 
 DEVICE=$(zenity --width=450 --height=300 \
@@ -43,51 +52,47 @@ esac
 
 dstFile="testados_$(date +%d-%m)"
 
-
-
 ping -s1 -c2 192.168.1.20 1>&2>/dev/null
 
 if [ $? = 0 ]; then
 	mac=$(arp -a 192.168.1.20 | cut -d" " -f4)
 
-TODO: Se o MAC existir no arquivo deve ser feito acesso SSH e dar aviso na tela se foi criado compliance ou nao;
-	grep $mac $dstFile &
-#	if [[ $? = 0 && -n $(grep $mac $dstFile | cut -f3) ]]; then
-	if [[ $? = 0 ]]; then
-#		sshpass -p 'ubnt' ssh -p22 -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 'ls -l /etc/persistent/ct || touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot'
-		sshUBNT 'ls -l /etc/persistent/ct || (touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot)'
-		out=$(echo $?)
 
-grep $mac $dstFile
-echo "MAC existe no arquivo" && exit
+# TODO: Se o MAC existir no arquivo deve ser feito acesso SSH e 
+#	dar aviso na tela se foi criado compliance ou nao;
+	# Caso MAC nao for encontrado no arquivo vai acessar, criar CT e retornar em tela o status do comando e
+	#	adicionar ao relatorio $dstFile as devidas informacoes
+
+	grep $mac $dstFile
+	if [ $? = 0 ]; then
+		version=$(sshUBNT 'echo $(cat /etc/version | cut -d. -f2-); ls -l /etc/persistent/ct > /dev/null || (touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot)' "ARG1")
+		out=$(echo $?)
+sleep 3
+		clear && echo
+echo "MAC contem no arquivo $dstFile"
 		# Report screen 192.168.1.20;
 			if [ $out = 0 ]; then
-				printf "\033[1;30m\t Compliance adicionado em $DEVICE\t$mac\033[0m\n"
+				printf "\033[1;32m    Compliance adicionado em $DEVICE - $mac - $version\033[0m\n\n"
 			else
-				printf "\033[1;31m Falha ao adicionar CT em $DEVICE\t$mac\n"
+				# "In log" = MAC ja esta no arquivo de log
+				printf "\033[1;31m In log: Falha ao adicionar CT em $DEVICE - $mac - $version\n\n"
 			fi
 	else
 
-grep $mac $dstFile
-echo "MAC nao está no arquivo" && exit
-
-#		sshUBNT 'ls -l /etc/persistent/ct || touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot'
-#		sshpass -p 'ubnt' ssh -p22 -o 'StrictHostKeyChecking no' ubnt@192.168.1.20 'ls -l /etc/persistent/ct || touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot'
+		version=$(sshUBNT 'echo $(cat /etc/version | cut -d. -f2-); ls -l /etc/persistent/ct > /dev/null || (touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot)' "ARG1")
 		out=$(echo $?)
 
-		# Make report 192.168.1.20;
+		clear && echo
+echo "Arquivo $dstFile nao contem o MAC"
+		# Make report and screen 192.168.1.20;
 			if [ $out = 0 ]; then
 				printf "$DEVICE\t$mac\n" >> "$dstFile"
-				printf "\033[1;30m\t Compliance adicionado em $DEVICE\t$mac\033[0m\n"
+				printf "\033[1;32m    Compliance adicionado em $DEVICE - $mac - $version\033[0m\n\n"
 			else
-				printf "\033[1;31m Falha ao adicionar CT em $DEVICE\t$mac\n"
+				printf "$DEVICE\t$mac\n" >> "$dstFile"
+				printf "\033[1;31m Without log: Falha ao adicionar CT em $DEVICE - $mac - $version\n\n"
 			fi
 
-
-
-
-
-#		clear && printf "\t Este dispositivo já está incluso no log \n\n"
 	fi
 
 
@@ -99,21 +104,26 @@ else
 	if [ $? = 0 ]; then
 		mac=$(arp -a 192.168.2.1 | cut -d" " -f4)
 
-		
-		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2 && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
+		### SSHAPASS PROPRIETÁRIO - Get user and reset default conf ###
+#		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2 && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
+#TODO: Acrescentar versao no retorno
+		client=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'echo "$(cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-)" && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
 		out=$(echo $?)
 
 		if [[ $out != 0 && $out != 5 ]]; then
 			client=$(sshpass -p MINHASENHA ssh -p7722 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2 && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
+#TODO: Acrescentar versao no retorno
 			out=$(echo $?)
 
 
 			if [[ $out != 0 && $out != 5 ]]; then
 				client=$(sshpass -p MINHASENHA ssh -p22 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+#TODO: Acrescentar versao no retorno
 				out=$(echo $?)
 
 				if [[ $out != 0 && $out != 5 ]]; then
 					client=$(sshpass -p MINHASENHA ssh -p7722 -o 'KexAlgorithms=+diffie-hellman-group1-sha1' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2') 1>&2>/dev/null
+#TODO: Acrescentar versao no retorno
 					out=$(echo $?)
 
 				fi
@@ -122,8 +132,10 @@ else
 
 		# Make report 192.168.2.1;
 			if [ $out = 0 ]; then
+				client=$(echo $output | cut -d+ -f1)
+				version=$(echo $output | cut -d+ -f2)
 				printf "$DEVICE\t$mac\t$client\n" >> "$dstFile"
-				clear && tail -n1 "$dstFile" && (echo; echo)
+				clear && tail -n1 "$dstFile" && (echo; echo) #TODO: Acrescentar versao no retorno
 			elif [ $out = 5 ]; then
 				clear && printf "\t\t\**** \033[1;31mATENÇÂO:\033[0m Usuário e/ou senha inválido(s) **** \n\n"
 			else

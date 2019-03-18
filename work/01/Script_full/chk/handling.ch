@@ -284,8 +284,9 @@ handAddressToAccess() {
 						(lastHandFunction "$ip") 1>&2>/dev/null
 					fi
 
-#					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
-#					xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
+#						xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
+#						xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
+
 
 				done
 			done

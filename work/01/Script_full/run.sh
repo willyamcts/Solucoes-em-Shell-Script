@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 23/05/2017;
+# Data: 25/05/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -21,12 +21,16 @@
 
 # Adicao de opcoes: handling e dialogs
 
-# Adaptação CT (Somente adicionar CT ou também setar CT;
-# Acrescentar tempo de execução no relatório - ao fim, alterar
+# 1. Adaptação CT (Somente adicionar CT ou também setar CT;
+# 2. Acrescentar tempo de execução no relatório - ao fim, alterar
 #  linha com sed;
 
-# Ao selecionar funções de backup e clicar em cancelar na janela onde seleciona o destino dos arquivos de backup, 
+# 3. Ao selecionar funções de backup e clicar em cancelar na janela onde seleciona o destino dos arquivos de backup, 
 #	aparece uma mensagem que será salvo em /tmp/log.txt
+
+
+# 4. As funcções de backup adicionar arquivo de backup no diretorio de destino dos arquivos por padrao, sem questionar o usuario;
+# 5. O ping condicional nao exerce a funcao, pois realiza ping para rede externa;
 
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
