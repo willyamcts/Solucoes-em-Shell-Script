@@ -1,0 +1,63 @@
+
+# Verifica existencia pacote sshpass, instala-o se necessario.
+checkSSHPackage(){
+	status=`dpkg --get-selections sshpass | cut -f 7`
+
+	if [ "$status" != "install" ] ;then
+
+		clear
+		echo; echo "Instalando pacote SSHPass..."
+		apt-get update > /dev/null &
+		sleep 5
+
+		# caso ocorra erro na atualizacao dos pacotes,
+		#  finaliza execucao do script;
+		if [ $? != 0 ]; then
+			clear
+			echo "Verifique a conexao com a internet e atualize"
+			echo "	sua lista de pacotes..."
+			exit
+		fi
+
+		apt-get install sshpass -y > /dev/null &
+	fi
+}
+
+
+# Remove arquivo SSH profile atual;
+delArchiveSSH(){
+
+	if [ -e ~/.ssh/known_hosts ] ; then
+		rm ~/.ssh/known_hosts
+	fi
+}
+
+
+# Exclui arquivos criados da execução anterior e restrição de acesso SSH
+removeFiles(){
+
+	delArchiveSSH
+
+	# Remove arquivo de enderecos;
+	if [ -e /tmp/address_responding.txt ] ; then
+		rm /tmp/address_responding.txt
+	fi
+
+	# Remover arquivo contem os IP e ID das RBs;
+	if [ -e /tmp/log_update.txt ]; then
+		echo >> /tmp/log_update.txt
+		echo "	==== `date +%D" "%H:%M` ====	" >> /tmp/log_update.txt
+	fi
+
+	# Remove arquivo de enderecos com versoes;
+	if [ -e /tmp/updates.txt ] ; then
+		rm /tmp/updates.txt
+	fi
+
+	# Remove script criado;
+#	if [ -e /tmp/.script.sh ]; then
+#		rm /tmp/.script.sh
+#	fi
+}
+
+

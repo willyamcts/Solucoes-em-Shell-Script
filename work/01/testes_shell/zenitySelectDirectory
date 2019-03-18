@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+dstFILES=$(zenity --file-selection --directory \
+		--title="Salvar arquivos de backup em: ")
+
+	case $? in
+		1) zenity --warning --width=400 --height=100 \
+			--text="\nNenhum arquivo de destino criado/selecionado. \n\nSera salvo em /tmp/log.txt"
+			dstFILES="~/backup-$(date +%d%m%Y_%H%M)"
+			;;
+	esac
+
+echo $dstFILES

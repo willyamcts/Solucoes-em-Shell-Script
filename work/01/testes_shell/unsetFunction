@@ -1,0 +1,13 @@
+#!/bin/bash
+
+fun() {
+	echo "Executando a funcao 1"
+}
+
+fun
+
+unset fun
+
+echo "Retorno = $?"
+
+fun

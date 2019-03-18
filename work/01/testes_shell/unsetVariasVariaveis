@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+
+a="texto 1"
+b="texto 2"
+
+echo 1: $a $b
+
+unset a b
+
+echo 2: $a $b

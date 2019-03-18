@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#var=funcao\ "1111"\ "2222" var
+
+
+
+funcao() {
+
+	echo "Entrou na funcao com $1 $2"
+
+}
+
+
+funcao "1111" "2222"
+
+$var
+
+
+# Se na primeira ocorrencia da linha já estiver com 3x #

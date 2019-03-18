@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+text="aaaa"
+
+if [ $text = 10 ]; then
+	echo "igual"
+else
+	echo "Text nao e igual a 10"
+fi

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+funcao(){
+
+	echo ARG1=$1 ARG2=$2 ARG3=$3 ARG=$4 ARG=$5
+	echo $@
+
+if [ -z "$@" ]; then
+	printf "Nenhum arg\n"
+else
+	printf "Contem arg\n"
+fi
+
+}
+
+funcao
+
+echo "--------- SAIDA 2: -----------"; echo 
+
+funcao a b c d f
+

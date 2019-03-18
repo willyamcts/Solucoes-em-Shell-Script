@@ -1,0 +1,99 @@
+
+
+connectSSHP22() {
+echo "connectSSH Default"
+#	sshpass -p "$2" ssh -p22 -o 'StrictHostKeyChecking no' -o 'C $1@$3 
+
+}
+
+
+backupUbiquiti() {
+
+
+# NECESSARIO COPIAR NOME DO DISPOSITIVO E IP PARA ALTERAR O NOME DO ARQUIVO;
+	sshpass -p "$2" scp -P 22 $1@$3:/tmp/system.cfg "$4"
+
+
+#	netconf.3.ip= #LINHA COM IP
+#	resolv.host.1.name= #LINHA COM NOME DO DISPOSITIVO
+
+#	echo "backupUbiquti - Funcao vazia - arg1=$1, arg2=$2, arg3=$3 arg4=$4"
+
+	out=$(echo $?)
+
+unset out
+}
+
+
+
+restoreBackup() {
+echo "NÃO IMPLEMENTADA"
+
+#	cat [local.arq.backup] | sshpass -p "$2" ssh -p22 $1@$3 'cat > /tmp/system.cfg; cfgmtd -w -p /etc/; reboot'
+#
+}
+
+
+
+# Em funcoes que retornam valores, para fins de relatório, devem retornar:
+#	- 1o = O conteudo;
+#	- 2o = O retorno da sua execucao;
+# 	* Amabas em um único "echo", separados por "+":
+#		ex: echo "$report+$return"
+
+deviceFullReport() {
+
+	run=$(sshpass -p "$2" ssh -p 22 -o 'StrictHostKeyChecking no' $1@$3 'echo "`cat /etc/board.info | grep board.name | cut -d= -f2`+\
+		`cat /etc/board.info | grep board.hwaddr | cut -d= -f2`+`cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2 | head -n 1`+\
+			`cat /tmp/system.cfg | grep wireless.1.ssid | cut -d= -f2`+-`/usr/www/signal.cgi | grep signal | cut -d- -f2 | cut -c-2`"')
+
+	out=$?
+
+	if [ $out -eq 255 ]; then
+		run=$(sshpass -p "$2" ssh -p 7722 -o 'StrictHostKeyChecking no' $1@$3 'echo "`cat /etc/board.info | grep board.name | cut -d= -f2`+\
+		`cat /etc/board.info | grep board.hwaddr | cut -d= -f2`+`cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2  | head -n 1`+\
+			`cat /tmp/system.cfg | grep wireless.1.ssid | cut -d= -f2`+-`/usr/www/signal.cgi | grep signal | cut -d- -f2 | cut -c-2`"')
+
+		out=$?
+	fi
+	
+	echo $run+$out
+
+unset out run
+}
+
+
+removeLinesDuplicate() {
+
+echo "Remover linhas duplicadas - ARG1:$1, ARG2:$2"
+
+}
+
+
+compliance() {
+
+
+	echo "Função Compliance"
+
+}
+
+
+massiveCompliance() {
+
+	sshpass -p "$2" ssh -p 22 -o 'ServerAliveCountMax=2' -o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'StrictHostKeyChecking no' $1@$3 \
+		'cat /etc/persistent/ct && exit 10 || (touch /etc/persistent/ct; cfgmtd -w -p /etc/; reboot)'
+
+	out=$(echo $?)
+
+	if [ $out -eq 255 ]; then
+		sshpass -p "$2" ssh -p 7722 -o 'ServerAliveCountMax=2' -o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'StrictHostKeyChecking no' $1@$3 \
+			'cat /etc/persistent/ct && exit 10 || (touch /etc/persistent/ct; cfgmtd -w -p /etc/; reboot)'
+
+		out=$(echo $?)
+	fi
+
+	echo $out
+
+unset out
+}
+

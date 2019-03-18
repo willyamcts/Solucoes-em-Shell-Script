@@ -1,0 +1,71 @@
+
+Padrão saída de erro = 10;
+
+
+Erros v1:
+- Aceitando acima de 4 octetos (verificação do valor de cada octeto está OK);
+- Verificar a existencia de todos os arquivos e sua integridade;
+- Criar função para gerar relatórios;
+
+
+FUNÇÕES:
+
+/dialog/dialogs.lxte:
+
+warningReturn: Apresenta um aviso ao usuário, informando que houve alguma falha durante a execução.
+	* Recebe 1 argumento
+		- [ARG1]: Retorno da função anterior, caso seja 1, é informado erro ao usuário e finalizado a execução;
+	Alterações na função não interfere no funcionamento de nenhuma outra;
+
+
+selectFunction: Utilizando zenity, dispõe um formulário onde o usuário seleciona uma opção que será o objetivo da execuçãodo script (Backup, relatório, etc.)
+	- Não recebe argumento;
+	** Dependendo da modificação que houver nas variáveis, afeta a função precedente - verifyOption (presente em handling.ch);
+
+
+selectModeExecution: Utilizando zenity, dispõe um formulário onde o usuário seleciona uma opção entre as 2 existentes, essas opções definem como será realizado a função desejada, atráves de uma range de IPs ou lista de endereços (address list).
+	- Não recebe argumento;
+
+
+dataAccess: 
+
+
+selectFile
+
+
+saveFile
+
+
+addressEntry
+
+
+
+
+
+
+
+./chk/handling.ch:
+
+checkOcteto: Verifica se a entrada do usuário corresponde a endereço IPv4.
+	* Recebe 2 argumentos 
+		- [ARG1]: Range de IP, faixa inicial e final separados por vírgula (,);
+		- [ARG2]: Função à ser chamada caso o octeto seja inválido;
+** Alterações na função não interferem no funcionamento de outra;
+
+
+verifyOption: 
+
+
+verifyModeExec: Faz a verificação do modo de execução informado, e chama a função correspondente ao modo.
+	* Recebe 3 argumentos
+		- [ARG1]: Opção selecionada pelo usuário;
+		- [ARG2]: Função a ser chamada - caso o usuário selecione a opção "Range de IPs";
+		- [ARG3]: Função a ser chamada - caso o usuário selecione a opção "Address list";
+
+
+handData
+
+handAddressToAccess
+
+handFileToAccess
+

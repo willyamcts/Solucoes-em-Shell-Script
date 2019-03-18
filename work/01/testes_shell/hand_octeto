@@ -1,0 +1,30 @@
+#!/bin/bash
+
+address=$(echo $1 | cut -d, -f1)
+i=0
+
+	for (( x=1; x <= 2; x++ )); do
+
+		for (( j=1; j <= 4; i++, j++ )); do	
+
+echo I = $i
+echo J = $j
+
+			if [ "$(echo $address | cut -d. -f$j)" -lt 0 ] && [ "$(echo $address | cut -d. -f$j)" -ge "256" ]; then
+				echo "valor valido" 
+			else
+				addr[$i]=$(echo $address | cut -d. -f$j)
+			fi
+
+		done
+
+echo "SAIU FOR INTERNO"
+	
+		address=$(echo $1 | cut -d, -f2)
+
+	done
+
+echo "Todos os valores de addr = ${addr[@]}"
+
+unset address
+unset i

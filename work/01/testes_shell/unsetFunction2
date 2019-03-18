@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source ./unsetFunction
+
+fun2() {
+	echo "Executando a funcao 2"
+}
+
+fun2
+
+unset fun2
+
+echo "Retorno = $?"
+
+fun2
