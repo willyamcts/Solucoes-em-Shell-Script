@@ -3,11 +3,11 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 19/04/2017 - 13:52;
+# Data: 19/04/2017 - 19:32;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e Ubiquiti; gera relatório 
 #	de dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
-#	PPPOE, AP conectado e seu respectivo sinal; adicionar Compliance Test e 
+#	PPPOE, AP conectado e seu respectivo sinal; adiciona Compliance Test e 
 #	alteração de canais para enlace em AP; também é possível verificar 
 #	dispositivos respondentes a ICMP. Os endereços utilizados para uso das 
 #	funções são inseridos via interface (zenity) ou de um arquivo, onde 
@@ -19,7 +19,6 @@
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
-
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
 

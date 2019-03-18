@@ -15,7 +15,7 @@ connectSSHp22() {
 	sshpass -p "$2" ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' \
-				-o 'StrictHostKeyChecking no' $1@$3 $4 1>/dev/null 2>/dev/null
+				-o 'StrictHostKeyChecking no' $1@$3 $4 1>&2>/dev/null
 }
 
 # Padrao conexao SSH na porta 7722
@@ -23,7 +23,7 @@ connectSSHp7722() {
 	sshpass -p "$2" ssh -p7722 -o 'UserKnownHostsFile=/dev/null' \
 		-o 'ServerAliveCountMax=2' -o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' \
-				-o 'StrictHostKeyChecking no' $1@$3 $4 1>/dev/null 2>/dev/null
+				-o 'StrictHostKeyChecking no' $1@$3 $4 1>&2>/dev/null
 }
 
 
@@ -36,7 +36,7 @@ backupUbiquiti() {
 	sshpass -p "$2" scp -P22 -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' \
-				-o 'StrictHostKeyChecking no' $1@$3:/tmp/system.cfg "$4/" 1>/dev/null 2>/dev/null
+				-o 'StrictHostKeyChecking no' $1@$3:/tmp/system.cfg "$4/" 1>&2>/dev/null
 
 	out=$(echo $?)
 
@@ -44,7 +44,7 @@ backupUbiquiti() {
 		sshpass -p "$2" scp -P7722 -o 'ServerAliveCountMax=2' \
 			-o 'ServerAliveInterval=10' \
 				-o 'ConnectTimeout=10' \
-					-o 'StrictHostKeyChecking no' $1@$3:/tmp/system.cfg "$4/" 1>/dev/null 2>/dev/null
+					-o 'StrictHostKeyChecking no' $1@$3:/tmp/system.cfg "$4/" 1>&2>/dev/null
 
 		out=$(echo $?)
 	fi
@@ -70,7 +70,7 @@ unset run out
 backupMikroTik() {
 #Necessario alterar handAddressToAccess - condicional proprietario
 
-	$(connectSSHp7722 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; system backup save; /export file=[/system identity get name]')
+	$(connectSSHp7722 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; system backup save; :foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".rsc"]]!="nil") do={/file remove $i}}; /export file=[/system identity get name]')
 
 	out=$(echo $?)
 
@@ -85,12 +85,12 @@ backupMikroTik() {
 
 
 	if [ $out = 0 ]; then
-		mkdir /tmp/"$3" 1>/dev/null 2>/dev/null
+		mkdir /tmp/"$3" 1>&2>/dev/null
 
 		sshpass -p "$2" scp -P7722 -r -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' \
-				-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/
+				-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/ 1>&2>/dev/null
 
 		out=$(echo $?)
 
@@ -98,7 +98,7 @@ backupMikroTik() {
 #			sshpass -p "$2" scp -P22 -r -o 'ServerAliveCountMax=2' \
 #			-o 'ServerAliveInterval=10' \
 #				-o 'ConnectTimeout=10' \
-#					-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/
+#					-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/ 1>&2>/dev/null
 #
 #			out=$(echo $?)
 #		fi
@@ -112,11 +112,10 @@ backupMikroTik() {
 			| awk -F-20 '{print $1}' | \
 				awk '{print $1}')
 
-		# Renomeia o arquivo ".src";
-#		mv /tmp/"$3"/*.src /tmp/"$3"/"$run.src"
+		mkdir "$4/$run" 2>/dev/null
 
-		# Move os arquivo ".backup" e ".rsc" para o diretorio definido;
-		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/" || mv "$(find /tmp/"$3/" -name "*.backup")" /tmp/"$3"/*.rsc "$4") && rm -rf /tmp/"$3/"
+		# Move os arquivo ".backup" e ".rsc" para um subdiretorio nomeado $run no diretorio definido;
+		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/$run/" || mv "$(find /tmp/"$3/" -name "*.backup")" /tmp/"$3"/*.rsc "$4/$run/") && rm -rf /tmp/"$3/"
 
 # Tratar erro caso arquivos não seja movidos para o dir definido
 

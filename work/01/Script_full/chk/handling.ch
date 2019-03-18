@@ -6,15 +6,15 @@ source ./command/functions.exe
 
 checkPackages() {
 
-	(pacman -Ss zenity || dpkg --get-selections | grep zenity) > /dev/null
+	(pacman -Ss zenity | grep installed || dpkg --get-selections | grep zenity) 1>&2>/dev/null
 
 	if [[ $? == 0 ]]; then
-		(pacman -Ss sshpass || dpkg --get-selections | grep sshpass) > /dev/null
+		(pacman -Ss sshpass | grep installed || dpkg --get-selections | grep sshpass) 1>&2>/dev/null
 
 	else
 		clear
 		printf "É necessario a instalação de pacotes...\n\n\t Iniciando a instalação...\n\n"
-		sudo pacman -Sy sshpass zenity || sudo apt-get install sshpass zenity
+		sudo pacman -Sy sshpass zenity || sudo apt-get install -y sshpass zenity
 	fi
 
 }
@@ -84,6 +84,10 @@ i=0
 			if [[ -n $octeto ]] || [[ $octeto -ge 0 ]] && [[ $octeto -lt 256 ]]; then
 				addr[$i]=$(echo $address | cut -d. -f$j)
 			else
+
+#				index=("${!addr[@]}")
+#				for x in "${index[@]::8}"; do unset "a[$x]"; done
+
 				$2				
 			fi
 
@@ -224,7 +228,7 @@ handAddressToAccess() {
 		for ((o2="${addr[1]}"; $o2 <= ${addr[5]}; o2++)); do
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
-			
+
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 					ip="$o1.$o2.$o3.$o4"
