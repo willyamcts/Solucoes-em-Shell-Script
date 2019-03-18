@@ -99,25 +99,69 @@ echo "NÃO IMPLEMENTADA"
 
 changeChannel(){
 
-	command='[ $(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; [ $(cat /tmp/system.cfg | grep wireless.1.scan_list.status) ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
-[ $(cat /tmp/system.cfg | grep wireless.1.scan_list.channels) ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$x/" /tmp/system.cfg && echo "existe" || echo "wireless.1.scan_list.channels=$x" >> /tmp/system.cfg; cfgmtd -w -p /etc/ && reboot'
-
-
-
-	$(connectSSHp22 "$1" "$2" "$3" '[ $(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; [ $(cat /tmp/system.cfg | grep wireless.1.scan_list.status) ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg; 
-[ $(cat /tmp/system.cfg | grep wireless.1.scan_list.channels) ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$1/" /tmp/system.cfg || echo "wireless.1.scan_list.channels=$1" >> /tmp/system.cfg; cfgmtd -w -p /etc/ && echo $1 && reboot' "$4")
+	$(connectSSHp22 "$1" "$2" "$3" << OEF
+		[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; 
+		cat /tmp/system.cfg | grep wireless.1.scan_list.status; [ $? = 0 ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
+		cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg && echo "existe" || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
+OEF
+)
 
 	out=$(echo $?)
 
 		if [ $out -eq 255 ] || [ $out -eq 1 ]; then
 
-			$(connectSSHp7722 "$1" "$2" "$3" '"$command"')
+#			cat "$dstScript" | $(connectSSHp22 "$1" "$2" "$3" 'cat > /tmp/sc; chmod +x /tmp/sc; /tmp/sc' )
+
+
+			$(connectSSHp7722 "$1" "$2" "$3" << OEF
+				[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) = "enabled" ] && sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg; 
+				cat /tmp/system.cfg | grep wireless.1.scan_list.status; [ $? = 0 ] && sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg || echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
+			cat /tmp/system.cfg | grep wireless.1.scan_list.channels; [ $? = 0 ] && sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$4/" /tmp/system.cfg && echo "existe" || echo "wireless.1.scan_list.channels=$4" >> /tmp/system.cfg
+OEF
+)
 			out=$(echo $?)
 		fi
 
 	echo $out
 unset out
 }
+
+
+# Funcao inutilizavel
+createScChannels() {
+
+	name=$(uname -sr | md5sum -t | cut -d- -f1)
+	dstScript="/tmp/.$name"
+	unset name
+	mkdir -p "$dstScript"
+
+echo "#!/bin/sh
+	if [[ \$(cat /tmp/system.cfg | grep radio.1.dfs | cut -d= -f2) == \"enabled\" ]]; then
+		sed -i 's/radio.1.dfs.status=.*/radio.1.dfs.status=disabled/' /tmp/system.cfg
+	fi
+
+	grep wireless.1.scan_list.status /tmp/system.cfg
+
+	if [ \$? = 0 ]; then
+		sed -i 's/scan_list.status.*/scan_list.status=enabled/' /tmp/system.cfg 
+	else
+		echo "wireless.1.scan_list.status=enabled" >> /tmp/system.cfg
+	fi
+
+
+	grep wireless.1.scan_list.channels /tmp/system.cfg
+
+	if [ \$? = 0 ]; then
+		sed -i "s/wireless.1.scan_list.channels=.*/wireless.1.scan_list.channels=$1/" /tmp/system.cfg
+	else
+		echo "wireless.1.scan_list.channels=$1" >> /tmp/system.cfg;
+	fi
+
+	cfgmtd -w -p /etc/ " > "$dstScript"/.XsetRmt
+
+	dstScript="$dstScript/.XsetRmt"
+}
+
 
 
 

@@ -3,13 +3,14 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 14:05 - 15/12/2016;
+# Data: 20/12/2016;
 #
 # Descrição: Remove virus MF.tar criado para dispostivos Ubiquiti.
 #	Ativa a porta 443 e altera a porta de acesso HTTP para 80 
 #	novamente e troca a SSH para 7722.
 #
-
+#	Obs.: Adicionado verificação de espaço em disco e atualização
+#
 
 # 	Erros: 
 #		- Algumas sessoes SSH podem travar, esse erro não foi tratado;

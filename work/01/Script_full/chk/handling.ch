@@ -1,4 +1,5 @@
-source ./command/functions.exe
+source ./command/functions.exe 
+
 
 # Contem funcoes para manipular informacoes;
 
@@ -18,6 +19,7 @@ verifyOption() {
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
+			createScChannels "$channels"
 			;;
 		"$option4") mainFunction=massiveCompliance
 			;;
@@ -111,12 +113,12 @@ makeReport() {
 				;;
 			10) out='Modificação já existe no dispositivo'
 				;;
-			default) out="Error code $2"
+			default) out="Error cod. $2"
 				;;
 		esac	
 		
 		case $FSELECT in
-#TODO: Para backup MK e Ubiquiti
+		# Backup MK e Ubiquiti
 			"$option1"|"$option2") 
 					if [ "$2" = 0 ]; then
 						content=$(printf "%s\t%s" "$1" "$3")
@@ -150,7 +152,18 @@ unset out content
 
 lastHandFunction() {
 
-		if [ "$mainFunction" == "deviceFullReport" ]; then
+		if [ $(echo $mainFunction | grep backup) ]; then
+			return=$($mainFunction "$user" "$pass" "$1" "$dstFILES" "ARG1")
+
+echo "LINHA 168: RETURN=$return" #TODO: Teste
+			deviceName=$(echo "$return" | cut -d+ -f1 | cut -d- -f1)
+			return=$(echo "$return" | cut -d+ -f2)
+echo "LINHA 168: RETURN=$return" #TODO: Teste
+
+			makeReport "$1" "$return" "$deviceName"
+
+
+		elif [ "$mainFunction" == "deviceFullReport" ]; then
 
 			value=$(deviceFullReport "$user" "$pass" "$1" "ARG1")
 			
@@ -168,23 +181,8 @@ lastHandFunction() {
 
 			fi
 
-echo "LINHA 159: VALUE =$value" #TODO: teste
-#echo "LINHA 153: DEV = $device, MAC = $mac, CLIENT = $client" #TODO: teste
-echo "LINHA 155: f4=$ssid f5=$signal f6=$return" #TODO: teste
-
 			makeReport "$1" "$return" "$device" "$mac" "$client" "$ssid" "$signal" #TODO: Rever
 
-		elif [ $(echo $mainFunction | grep backup) ]; then
-
-echo "LINHA 169: Destino dos arquivos: $dstFILES" #TODO: Teste
-
-			return=$($mainFunction "$user" "$pass" "$1" "$dstFILES" "ARG1")
-echo "LINHA 168: RETURN=$return" #TODO: Teste
-			deviceName=$(echo "$return" | cut -d+ -f1 | cut -d- -f1)
-			return=$(echo "$return" | cut -d+ -f2)
-echo "LINHA 168: RETURN=$return" #TODO: Teste
-
-			makeReport "$1" "$return" "$deviceName"
 
 		elif [ $(echo $mainFunction | grep changeChannel) ]; then
 			return=$($mainFunction "$user" "$pass" "$1" "$channels" "ARG1")
@@ -234,6 +232,6 @@ handFileToAccess() {
 	makeReport
 
 	for ip in $(cat $FILE); do
-		lastHandFunction "$ip"	
+		lastHandFunction "$ip"
 	done
 }

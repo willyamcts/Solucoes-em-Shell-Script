@@ -3,10 +3,10 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 12/2016 - 10:04;
+# Data: 12/2016 - 12:49;
 #
 # Descrição: Faz atualização de firmware de dispositivos Ubiquiti 5.8 GHz.
-#	Alterar linha 65 e arquivo contentMainBlock.part.
+#	Alterar linha 72 e arquivo contentMainBlock.part.
 
 
 # v16 = Incrementando runtime e data e hora da execucao no arq. report.out
@@ -32,7 +32,7 @@
 # Overviewer:
 #	Verifica IPs ativos na rede e adiciona a um arquivo na
 #	pasta temporaria; realizado leitura do arquivo, fazendo chamada
-#	da funcao comandoUpdate; Apos update faz a verificacao de IPs com versao
+#	da funcao commandUpdate; Apos update faz a verificacao de IPs com versao
 #	do firmware, equipamentos com versao fora da atual sao reiniciados e apos
 #	2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
 #	gera um relatorio simples de execucao presente em ./ouput.txt;
@@ -45,10 +45,14 @@ source contentMainBlock.part
 arcAddress='/tmp/address_responding.txt'
 arcReport='./report.out'
 arcLog='/tmp/log_update.out'
+arcVersions='/tmp/updates.txt'
+
+qtDevices=0
+
 
 
 # Chamada de blocos essenciais para execução.
-blocoPrincipal(){
+mainBlock(){
 
 	# chamada da funcao;
 	removeFiles
@@ -61,11 +65,15 @@ blocoPrincipal(){
 		exit
 	fi
 
+	date=`date +%H:%M" - "%d/%m/%Y`
+	creatingScript $CURRENTVERSION > /tmp/.script.sh
+
 	# Range de IPs
-	for ip in $oct1.{76,79}.{3,8,13,10,73,74,113,14,15,16,163,201,130,131}.{5..254} ; do
+	for ip in $oct1.{76,79}.{8..8}.{124..160} ; do
 #	for ip in $oct1.{76,79}.{3,8,13,10,73,74,113}.{5..254} ; do
+
 		# chamada da funcao verifica IPs ativos;
-		verifyAddressReply > /dev/null &
+		verifyAddressReply $ip #> /dev/null &
 
 		# Saida em tela, informando qual faixa esta verificando
 		addr=`echo $ip | cut -d. -f4`
@@ -75,53 +83,38 @@ blocoPrincipal(){
 		fi
 
 	done
-
-	date=`date +%H:%M" - "%d/%m/%Y`
-	creatingScript $CURRENTVERSION > /tmp/.script.sh
-
 }
 
 
-# Manipula informações que serão utilizadas no bloco de execução.
-blocoDeExecucao(){
-
-	# quantidade de linhas do arquivo /tmp/address_responding;
-	qtLines=`wc -l $2 | cut -d " " -f1`
-
-	# respectivo IP presente na linha;
-	for ((linhaAtual=1; $linhaAtual <= $qtLines; linhaAtual++)); do
-
-		# recebe IP da linha especifica
-		ip=`sed -n $linhaAtual'p' $2`
-
-		sleep 3
-		# Chama função com bloco de comandos a executar;
-		$1
-#		$currentFunction
-
-	done
-}
 
 
-# Verifica IPs ativos na rede e envia-os ao arquivo /tmp/address_responding.txt
-#	 via ICMP, 2 pacotes somente.
+# Verifica IPs ativos (via ICMP) na rede e executa função de update
 verifyAddressReply(){
 
-	ping -c 2 $ip
+	ping -c 2 $1 > /dev/null
 	if [ $? = 0 ]; then
-		echo $ip >> $arcAddress
+		echo $1 >> $arcAddress
+
+		commandUpdate $1
+
+
+		((qtDevices++))
+#TODO: Teste
+echo $qtDevices
 	fi
 
+
 }
+
+
 
 
 # Finaliza processo SSH local apos 5min da sessao iniciada ou ate equipamento
 #	deixar de responder.
-
 killSession(){
 date=`echo \`date +%s\` + '540' | bc`
 	until [ `date +%s` -eq $date ]; do
-		ping -c2 $ip
+		ping -c2 $1
 
 		if [ $? != 0 ]; then
 			killall sshpass > /dev/null
@@ -135,48 +128,66 @@ date=`echo \`date +%s\` + '540' | bc`
 }
 
 
-# 1- Bloco execução, envia script e o executa no equipamento.
-comandoUpdate(){
+# Bloco execução, envia script e o executa no equipamento.
+commandUpdate(){
 
 	echo; echo
 	
-		killSession > /dev/null &
+		killSession $1 > /dev/null &
 		PIDKSSH=$!
 
-		cat /tmp/.script.sh | sshpass -p $PASSWORD \
-			ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null"\
-				$USER@$ip 'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
+		cat /tmp/.script.sh | sshpass -p $PASSWORD ssh -p $PORTSSH \
+			-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null"\
+				$USER@$1 'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
 		retorno=$?
 
 		if [ $retorno = 0 ]; then
 			content="Update sucess"
+
+#TODO: Temporario - remover linha ssh -p 22
+		elif [ $retorno = 255 ]; then
+			cat /tmp/.script.sh | sshpass -p $PASSWORD ssh -p 22 \
+			-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null"\
+				$USER@$1 'cat >> /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh'
+
+
 		else
 			content="Update failed, $retorno"
 		fi
 
+
 		# Kill sessao SSH
 		kill -9 $PIDKSSH > /dev/null &
 
-	echo "$ip	$content" >> $arcLog
+	echo "$1	$content" >> $arcLog
 }
 
 
-
-# 1- Bloco execução,
+# Check version devices by $arcAddress
 accessVersion(){
-	delArchiveSSH
 
-	clear; echo; echo
-	echo "		Verificando versão de $ip"
+	for ip in `cat $arcAddress`; do
+		
+		clear; echo; echo
+		echo "		Verificando versão de $ip"
 
-	version=`sshpass -p $PASSWORD ssh -p $PORTSSH \
-			-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" \
-				$USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
+		version=`sshpass -p $PASSWORD ssh -p $PORTSSH \
+				-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" \
+					$USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
 
-	echo "$ip	$version" >> /tmp/updates.txt
+		if [ $? = 255 ]; then
+					version=`sshpass -p $PASSWORD ssh -p 22 \
+				-o "ConnectTimeout=5" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" \
+					$USER@$ip 'cat /etc/version | cut -d"v" -f2'` > /dev/null
+		fi
+
+		echo "$ip	$version" >> $arcVersions
+
+	done
 }
 
 
+# Does the count runtime;
 runtime(){
 	finalDate=`date +%s`
 	addition=`expr $finalDate - $initialDate`
@@ -186,23 +197,28 @@ runtime(){
 }
 
 
+# Build file report using checkVersion function;
 buildReport() {
-	blocoDeExecucao accessVersion $arcAddress
+	accessVersion
 
 	# Info eq. fora da versão atual;
-	manualUpdate=`grep -v $CURRENTVERSION /tmp/updates.txt | cut -f1 | wc -l`
+	manualUpdate=`grep -v $CURRENTVERSION $arcVersions | cut -f1 | wc -l`
 
 		echo >> $arcReport
-		echo -e "\n		=============== $date - REPORT FINAL ================== \
+		echo -e "\n	=============== $date - REPORT FINAL ============== \
 					\n  $manualUpdate equipamento(s) não atualizado(s) de $qtDevices." >> $arcReport
 
 	for i in `cat $arcAddress`; do
 			echo -n "$i " >> $arcReport
 	done
 
+	rm -f $arcAddress
+
 	echo >> $arcReport
 	runtime >> $arcReport
 }
+
+
 
 
 # ===========================================================================#
@@ -221,10 +237,11 @@ echo; echo "Informe o IP: "
 read IP
 
 echo; echo "Informe a versão atual do firmware: [5.6.8] "
-#read CURRENTVERSION
-CURRENTVERSION='5.6.8'
+read CURRENTVERSION
+#CURRENTVERSION='5.6.8'
 
 echo; echo "SSH port[22]: "
+PORTSSH='22'
 read PORTSSH
 
 #echo; echo "Informe o link completo para download do firmware $currentVersion: "
@@ -238,85 +255,44 @@ read PORTSSH
 oct1=`echo $IP | cut -d. -f1`; oct2=`echo $IP | cut -d. -f2`
 oct3=`echo $IP | cut -d. -f3`; oct4=`echo $IP | cut -d. -f4`
 
-sleep 3; clear; echo
-echo "	Verificando IPs ativos da faixa especificada na rede, aguarde..."
-	blocoPrincipal
 
-sleep 60
-	# Verifica existencia de IPs ativos e inicia Upgrade;
-	sleep 3; clear; echo
-	if [ -e $arcAddress ]; then
-		echo "			Iniciando sessões SSH	"; sleep 3; echo
-		blocoDeExecucao comandoUpdate $arcAddress
-		qtDevices=$qtLines # Quantidade dispositivos
-	else
-		echo "		Nenhum IP da faixa especificada está ativo."
-		exit
-	fi
+
+sleep 3; clear; echo
+echo "	Verificando IPs ativos e atualizando, aguarde..."
+	mainBlock
 
 
 # Tratamento de equipamentos que nao foram atualizados no primeiro
 #  comando, inicia aqui!;
 
-# Time 30s
-	for temp in {30..1}; do
-		echo; echo; echo "			Aguarde... $temp"s""
-		sleep 1; clear
-	done
-
-
-# 2.1 - Verifica a versao dos equipamentos;
-	if [ -e /tmp/updates.txt ]; then
-		rm /tmp/updates.txt
+# 2- Verifica a versao dos equipamentos;
+	if [ -e $arcVersions ]; then
+		rm $arcVersions
 	fi
 
+	accessVersion
 
-	blocoDeExecucao accessVersion $arcAddress
+	# Devices not updated 
+	grep -v $CURRENTVERSION $arcVersions | cut -f1 > $arcAddress
+	rm -f $arcVersions
 
 
-echo "GREP -V " >> $arcLog
-		grep -v $CURRENTVERSION /tmp/updates.txt | cut -f1 > $arcAddress
-		rm /tmp/updates.txt
 
-echo "IF abaixo de GREP -V" >> $arcLog
-	# 2.2 - Se conteudo do arquivo address nao for vazio;
-	if [ -n `cat $arcAddress` ]; then
-
-		for temp in {90..1}; do
-			clear; echo; echo
-			echo "			Aguarde $temp"s""
-			sleep 1
-		done
-
-		# 2.2.2 - Se o arquivo address possuir conteudo ira chamar blockExecution para
-		#  executar bloco commandUpdate;
-		if [ -e $arcAddress ]; then
-# TODO: colocar quantidade $x;
+	# 2.1- Se conteudo do arquivo address nao for vazio (-n);
+	if [ ! -z `cat $arcAddress` ]; then
 			clear; echo "		Iniciando atualizacoes dos x eq. restantes"
-			blocoDeExecucao comandoUpdate $arcAddress
-		fi
-
-
-		# 2.2.3 - Aguarda 2min ate voltar ultimo equipamento atualizado;
-		for temp in {120..1}; do
-			echo; echo
-			echo "			Gerando relatório, aguarde $temp"s""
-			sleep 1; clear
-		done
+			for ip in `cat $arcAddress`; do
+				verifyAddressReply $ip
+			done
 	fi
-
 
 	# Removendo arquivos
-	rm /tmp/.script.sh
+	rm -f /tmp/.script.sh
 
-
-# 2.3 - Verifica a versao dos equipamentos - 2a vez;
-	if [ -e /tmp/updates.txt ]; then
-		rm /tmp/updates.txt
+	# 2.2 - Verifica a versao dos equipamentos - 2a vez;
+	if [ -e $arcVersions ]; then
+		rm $arcVersions
 	fi
-
-#TODO: redundandte - exitente em buildReport
-#	blocoDeExecucao accessVersion $arcAddress #& > /dev/null
 
 # 3 - Gera relatorio e exibe o mesmo
 buildReport

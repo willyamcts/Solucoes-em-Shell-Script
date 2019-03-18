@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 13/04/2017;
+# Data: 17/04/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -31,8 +31,6 @@ source ./dialog/dialogs.lxte ./chk/handling.ch
 #sed '/$pass/ s/^$mainFunction/#$mainFunction/'
 
 #sed '/$pass/ s/#$mainFunction/$mainFunction/'
-
-
 
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
