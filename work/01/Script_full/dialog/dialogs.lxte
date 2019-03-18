@@ -23,15 +23,15 @@ option2='Backup Ubiquiti'
 option3='Change channel massive'
 option4='Change User and/or Password massive'
 option5='Create ComplianceTest massive'
-option6='Endereços ativos'
-option7='Report devices Ubiquiti (Client-Full)'
-#option8='
+option6='Custom command'
+option7='Active address'
+option8='Report devices Ubiquiti (Client-Full)'
 
 	FSELECT=$(zenity --width=450 --height=400 \
 		--list --title="Functions" --text="Select option: " \
 			--radiolist --column "Check" --column "Function" \
 				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4"\
-					FALSE "$option7")
+					FALSE "$option6" FALSE "$option8")
 
 	warningReturn $?
 
@@ -194,3 +194,11 @@ entryNewData() {
 
 }
 
+
+entryCustomCommand() {
+	
+	zenity --entry --title="" \
+		--text="Informe o comando: "
+
+	warningReturn $?
+}

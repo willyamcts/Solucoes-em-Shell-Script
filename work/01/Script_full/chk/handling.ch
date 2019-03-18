@@ -48,14 +48,16 @@ echo "$dstFILES"
 #			selectOptionCT
 #			[[ $? = 1 ]] && echo "asdsdsa" #mainFunction=massiveCompliance
 			;;
-		"$option6") mainFunction=activeAddress
+		"$option6") mainFunction=customCommand
+			CMD=$(entryCustomCommand "ARG1")
+			;;
+		"$option7") mainFunction=activeAddress
 			unset handData
 			;;
-		"$option7") mainFunction=deviceFullReport
+		"$option8") mainFunction=deviceFullReport
 			;;
 	esac
 }
-
 
 
 verifyModeExec() {
@@ -193,7 +195,7 @@ makeReport() {
 					;;
 
 		# Para deviceFullReport
-			"$option7")
+			"$option8")
 					if [ "$2" = 0 ]; then
 						content=$(printf "%s\t%s\t%s\t%s\t%s" "$3" "$4" "$5" "$6" "$7")
 					else
@@ -251,6 +253,12 @@ lastHandFunction() {
 			return=$($mainFunction "$user" "$pass" "$1" "$newUser" "$newPwd" "ARG1")
 			makeReport "$1" "$return"
 
+		elif [ $(echo $mainFunction | grep custom) ]; then
+echo "CustomCommand"
+			$mainFunction "$user" "$pass" "$1" "$CMD"
+echo "CustomCommand \$? = $?" && sleep 2
+			makeReport "$1" "$?"
+
 		else
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
 			makeReport "$1" "$return"
@@ -276,7 +284,7 @@ handAddressToAccess() {
 					ip="$o1.$o2.$o3.$o4"
 
 					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
-					clear && tail -n1 $toFILE && printf "\n\n\tTentativa em $ip"
+					clear && tail -n1 $toFILE && printf "\n\n \tTentativa em $ip \n\n"
 
 					ping -s1 -c2 $ip 1>&2>/dev/null 
 
