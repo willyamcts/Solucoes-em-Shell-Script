@@ -202,9 +202,16 @@ lastHandFunction() {
 
 			echo "NORMAL" #TODO
 
-			echo "$1" >> /tmp/list.txt #EMPRO
-#			return=$($mainFunction "$user" "$pass" "$1" "ARG1") #EMPRO: Comentado
-			$($mainFunction "$user" "$pass" "$1")
+#			echo "$1" >> /tmp/list.txt #EMPRO
+			return=$($mainFunction "$user" "$pass" "$1" "ARG1") #EMPRO: Comentado
+#			$($mainFunction "$user" "$pass" "$1") # EMPRO
+
+			client=$(echo $return | cut -d+ -f1)
+			return=$(echo $return | cut -d+ -f2)
+
+			echo CLIENT=$client RETURN=$return
+
+
 #			makeReport "$1" "$return" #EMPRO: Comentado
 
 		else

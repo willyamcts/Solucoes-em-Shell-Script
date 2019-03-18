@@ -171,20 +171,19 @@ unset run out #file
 
 updateUbiquiti() {
 
-	cat /tmp/.script.sh | $(connectSSHp22 "$1" "$2" "$3" \
-		'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh')
-
-#	out=$(echo $?)
+	run=$(cat /tmp/script.sh | $(connectSSHp7722 "$1" "$2" "$3" \
+			'cat > /tmp/script.sh; chmod +x /tmp/script.sh; echo `cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2 | head -n 1`; /tmp/script.sh'))
+	out=$(echo $?)
 
 #	if [[ $out = 1 || $out = 255 ]]; then #EMPRO; Comentado
 	if [[ $? = 1 || $? = 255 ]]; then
-		cat /tmp/.script.sh | $(connectSSHp7722 "$1" "$2" "$3" \
-			'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh')
+		run=$(cat /tmp/script.sh | $(connectSSHp7722 "$1" "$2" "$3" \
+			'cat > /tmp/script.sh; chmod +x /tmp/script.sh; echo `cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2 | head -n 1`; /tmp/script.sh'))
 
-#		out=$(echo $?)
+		out=$(echo $?)
 	fi
 
-#	echo $out
+	echo run+$out
 
 #	unset out
 }
@@ -217,7 +216,7 @@ echo "#!/bin/sh
 			esac
 
 			cd /tmp
-			wget -c -O firmware.bin "'$URL'" && ubntbox fwupdate.real -m /tmp/firmware.bin 
+			wget -c -O firmware.bin "'$URL'" # && ubntbox fwupdate.real -m /tmp/firmware.bin #TODO: Descomentar
 			
 
 #		elif [ \$build != $2 ]; then
@@ -240,30 +239,8 @@ echo "#!/bin/sh
 
 		fi
 
-	fi" > /tmp/.script.sh
+	fi" > /tmp/script.sh
 }
-
-
-
-
-#			if [ \"\$version\" == \"XM\" ]; then
-#				URL="$4"
-#				wget -c "'$URL'" && mv /tmp/down.php?id=27 /tmp/v$1.bin
-#
-#			elif [ \"\$version\" == \"XW\" ]; then
-#				URL="$5"
-#				wget -c "'$URL'" && mv /tmp/down.php?id=28 /tmp/v$1.bin
-#
-#			elif [ \"\$version\" == \"WA\" ]; then	
-#				URL="$6"
-#				wget -c "'$URL'" && mv /tmp/down.php?id=28 /tmp/v$1.bin
-#
-#			elif [ \"\$version\" == \"XC\" ]; then
-#				URL="$7"
-#				wget -c "'$URL'" && mv /tmp/down.php?id=28 /tmp/v$1.bin
-#			fi
-
-
 
 
 #		build="'`cat /etc/version | cut -d"v" -f2`'"

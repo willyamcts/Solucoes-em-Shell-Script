@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 09/05/2017;
+# Data: 23/05/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -25,11 +25,15 @@
 # Acrescentar tempo de execução no relatório - ao fim, alterar
 #  linha com sed;
 
-
-source ./dialog/dialogs.lxte ./chk/handling.ch
+# Ao selecionar funções de backup e clicar em cancelar na janela onde seleciona o destino dos arquivos de backup, 
+#	aparece uma mensagem que será salvo em /tmp/log.txt
 
 
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
+
+
+source ./dialog/dialogs.lxte ./chk/handling.ch
+
 
 checkPackages
 

@@ -27,10 +27,14 @@ verifyOption() {
 		"$option1") mainFunction=backupMikroTik
 			# Utilizar variavel dstFILES que contem o diretorio a ser salvo os backups.
 			dstFILES=$(saveFiles "ARG1")
+echo "$dstFILES"
+			[[ -e $dstFILES ]] || mkdir $dstFILES
 			;;
 		"$option2") mainFunction=backupUbiquiti
 			# Utilizar variavel dstFILES que contem o diretorio a ser salvo os backups.
 			dstFILES=$(saveFiles "ARG1")
+echo "$dstFILES"
+			[[ -e $dstFILES ]] || mkdir $dstFILES
 			;;
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
@@ -61,8 +65,10 @@ mode2="Address list"
 
 	case $1 in
 		"$mode1") $2
+			 unset selectFile
 			;;
 		"$mode2") $3
+			 unset addressEntry
 			;;
 	esac
 }
@@ -219,9 +225,8 @@ lastHandFunction() {
 			makeReport "$1" "$return" "$deviceName"
 
 
-		elif [ "$mainFunction" == "deviceFullReport" ]; then
-
-			value=$(deviceFullReport "$user" "$pass" "$1" "ARG1")
+		elif [ $(echo $mainFunction | grep deviceFullReport) ]; then
+			value=$($mainFunction "$user" "$pass" "$1" "ARG1")
 			
 			if [ -z "$(echo $value | cut -d+ -f1)" ]; then
 				return=$(echo $value | cut -d+ -f2)
@@ -271,13 +276,12 @@ handAddressToAccess() {
 					ip="$o1.$o2.$o3.$o4"
 
 					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
-#					clear; printf "\n\t%s" "Verificando $ip"
+					clear && tail -n1 $toFILE && printf "\n\n\tTentativa em $ip"
 
 					ping -s1 -c2 $ip 1>&2>/dev/null 
 
 					if (( $? == 0 )); then
-						lastHandFunction "$ip"
-						tail -n1 $toFILE
+						(lastHandFunction "$ip") 1>&2>/dev/null
 					fi
 
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
