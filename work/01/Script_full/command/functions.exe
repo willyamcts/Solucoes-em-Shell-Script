@@ -481,9 +481,10 @@ sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep sshd.status | wc -l) -eq 1 ] || (sed -i 's/sshd.status=.*//g' /tmp/system.cfg && echo 'sshd.status=enabled' >> /tmp/system.cfg)
+sed -i "s/resolv.host.1.name=.*/resolv.host.1.name=\$(cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2)/" /tmp/system.cfg
 			$command
 			sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
-[ $(cat /tmp/system.cfg | grep 1.ssid | wc -l) -eq 2 ] || cfgmtd -w -p /etc && reboot && exit 127
+[ $(cat /tmp/system.cfg | grep 1.ssid | wc -l) -eq 2 ] || (cfgmtd -w -p /etc && exit 127)
 			cfgmtd -w -p /etc && reboot
 OEF
 		out=$(echo $?)
@@ -498,8 +499,10 @@ sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep sshd.status | wc -l) -eq 1 ] || (sed -i 's/sshd.status=.*//g' /tmp/system.cfg && echo 'sshd.status=enabled' >> /tmp/system.cfg)
+sed -i "s/resolv.host.1.name=.*/resolv.host.1.name=\$(cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2)/" /tmp/system.cfg
 				$command
 				sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+[ $(cat /tmp/system.cfg | grep 1.ssid | wc -l) -eq 2 ] || (cfgmtd -w -p /etc && exit 127)
 				cfgmtd -w -p /etc && reboot
 OEF
 			out=$(echo $?)
@@ -514,8 +517,10 @@ sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep sshd.status | wc -l) -eq 1 ] || (sed -i 's/sshd.status=.*//g' /tmp/system.cfg && echo 'sshd.status=enabled' >> /tmp/system.cfg)
+sed -i "s/resolv.host.1.name=.*/resolv.host.1.name=\$(cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2)/" /tmp/system.cfg
 					$command
 					sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+[ $(cat /tmp/system.cfg | grep 1.ssid | wc -l) -eq 2 ] || (cfgmtd -w -p /etc && exit 127)
 					cfgmtd -w -p /etc && reboot
 OEF
 				out=$(echo $?)
@@ -530,8 +535,10 @@ sed -i 's/ssh.port.*//g' /tmp/system.cfg
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep httpd.https.status | wc -l) -eq 1 ] || (sed -i 's/httpd.https.status.*//g' /tmp/system.cfg && echo 'httpd.https.status=enabled' >> /tmp/system.cfg)
 [ $(cat /tmp/system.cfg | grep sshd.status | wc -l) -eq 1 ] || (sed -i 's/sshd.status=.*//g' /tmp/system.cfg && echo 'sshd.status=enabled' >> /tmp/system.cfg)
+sed -i "s/resolv.host.1.name=.*/resolv.host.1.name=\$(cat /tmp/system.cfg | grep ppp.1.name | cut -d= -f2)/" /tmp/system.cfg
 					$command
 					sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+[ $(cat /tmp/system.cfg | grep 1.ssid | wc -l) -eq 2 ] || (cfgmtd -w -p /etc && exit 127)
 					cfgmtd -w -p /etc && reboot
 OEF
 					out=$(echo $?)

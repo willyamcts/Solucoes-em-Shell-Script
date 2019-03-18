@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 27/06/2017;
+# Data: 28/06/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -17,6 +17,8 @@
 #	SSH nas portas 22 e 7722.
 #
 #	* Incluso a opção de habilitar/desabilitar serviços como HTTPS, SSH.
+#	Também há uma das ultimas linhas de "command" altera o hostname para
+#	o mesmo nome disposto no campo de usuário PPPOE.
 #
 # Requisitos: Zenity e SSHPass.
 
