@@ -44,17 +44,24 @@ echo "$dstFILES"
 		"$option4") mainFunction=changeUserPwd
 			handData entryNewData 1 "ARG1"
 			;;
-		"$option5") mainFunction=massiveCompliance
+		"$option5") mainFunction=servicesPorts
+			disableSERVICE=$(disableServices "ARG1")
+echo $disableSERVICE
+			servicesPORT=$(changePorts "ARG1")
+echo $servicesPORT
+
+			;;
+		"$option6") mainFunction=massiveCompliance
 #			selectOptionCT
 #			[[ $? = 1 ]] && echo "asdsdsa" #mainFunction=massiveCompliance
 			;;
-		"$option6") mainFunction=customCommand
+		"$option7") mainFunction=customCommand
 			CMD=$(entryCustomCommand "ARG1")
 			;;
-		"$option7") mainFunction=activeAddress
+		"$option8") mainFunction=activeAddress
 			unset handData
 			;;
-		"$option8") mainFunction=deviceFullReport
+		"$option9") mainFunction=deviceFullReport
 			;;
 	esac
 }
@@ -195,7 +202,7 @@ makeReport() {
 					;;
 
 		# Para deviceFullReport
-			"$option8")
+			"$option9")
 					if [ "$2" = 0 ]; then
 						content=$(printf "%s\t%s\t%s\t%s\t%s" "$3" "$4" "$5" "$6" "$7")
 					else
@@ -253,6 +260,11 @@ lastHandFunction() {
 			return=$($mainFunction "$user" "$pass" "$1" "$newUser" "$newPwd" "ARG1")
 			makeReport "$1" "$return"
 
+
+		elif [ $(echo $mainFunction | grep servicesPort) ]; then
+			$mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1"
+#			return=$($mainFunction "$user" "$pass" "$1" "$disableSERVICE" "$servicesPORT" "ARG1") && makeReport "$1" "$return"
+
 		elif [ $(echo $mainFunction | grep custom) ]; then
 echo "CustomCommand"
 			$mainFunction "$user" "$pass" "$1" "$CMD"
@@ -260,6 +272,7 @@ echo "CustomCommand \$? = $?" && sleep 2
 			makeReport "$1" "$?"
 
 		else
+echo "Padrao" && sleep 10
 			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
 			makeReport "$1" "$return"
 		fi
@@ -286,10 +299,10 @@ handAddressToAccess() {
 					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
 					clear && tail -n1 $toFILE && printf "\n\n \tTentativa em $ip \n\n"
 
-					ping -s1 -c2 $ip 1>&2>/dev/null 
+					ping -s1 -c2 $ip 1>&2>/dev/null
 
 					if (( $? == 0 )); then
-						(lastHandFunction "$ip") 1>&2>/dev/null
+						(lastHandFunction "$ip") #1>&2>/dev/null #TODO: Descomentar
 					fi
 
 #						xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'

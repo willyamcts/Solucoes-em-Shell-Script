@@ -22,16 +22,17 @@ option1='Backup MikroTik'
 option2='Backup Ubiquiti'
 option3='Change channel massive'
 option4='Change User and/or Password massive'
-option5='Create ComplianceTest massive'
-option6='Custom command'
-option7='Active address'
-option8='Report devices Ubiquiti (Client-Full)'
+option5='Change services/ports'
+option6='Create ComplianceTest massive'
+option7='Custom command'
+option8='Active address'
+option9='Report devices Ubiquiti (Client-Full)'
 
 	FSELECT=$(zenity --width=450 --height=400 \
 		--list --title="Functions" --text="Select option: " \
-			--radiolist --column "Check" --column "Function" \
+			--radiolist --column "Selection" --column "Function" \
 				TRUE "$option1" FALSE "$option2" FALSE "$option3" FALSE "$option4"\
-					FALSE "$option6" FALSE "$option8")
+					FALSE "$option5" FALSE "$option6" FALSE "$option8" FALSE "$option9")
 
 	warningReturn $?
 
@@ -45,7 +46,7 @@ selectModeExecution() {
 
 	MOD=$(zenity --width=200 --height=150 \
 		--list --title="Modo exec." --text="Selecione o modo de execução:" \
-			--radiolist --column "" --column="Mode" \
+			--radiolist --column "Selection" --column="Mode" \
 				TRUE "Range de IP" FALSE "Address list")
 
 	warningReturn $?
@@ -68,6 +69,8 @@ FILE=$(zenity --file-selection --title="Selecione o arquivo\
 	case $? in
 		0) zenity --info --width=275 --height=130 \
 				--text="\nArquivo selecionado: \n\n $FILE\n"
+
+			sed -i 's/\r//g' $FILE
 			modeFunction='handFileToAccess "$FILE"'
 			;;
 
@@ -201,4 +204,60 @@ entryCustomCommand() {
 		--text="Informe o comando: "
 
 	warningReturn $?
+}
+
+
+disableServices() {
+
+	zenity --warning --width=400 --height=100 --title="ATTENTION!" \
+			--text="\nSeja coerente ao selecionar as opções a seguir, o equipamento será configurado de acordo com as suas definições."
+
+	disableSERVICE=$(zenity --list --title="Desabilitar serviços" --text "Caso queira desabilitar algum serviço, selecione abaixo.\n\n   * Serviços não selecionados serão habilitados caso estejam desabilitados;" --checklist --separator="+" \
+				--column "Seleção" --column "Serviço" \
+					FALSE "HTTP" FALSE "HTTPS" FALSE "SSH")
+
+	warningReturn $?
+
+	echo $disableSERVICE
+	unset disableSERVICE
+}
+
+
+changePorts() {
+
+	changeHTTP=$(zenity --question --width=450 --height=120 --title="Serviço HTTP" \
+		--text="Deseja alterar a porta HTTP? ")
+
+		case $? in
+			0) changeHTTP=$(zenity --entry --title="" \
+				--text="Porta para o serviço HTTP: ")
+
+				warningReturn $?
+				;;
+		esac
+
+	changeHTTPS=$(zenity --question --width=450 --height=120 --title="Serviço HTTPS" \
+		--text="Deseja alterar a porta HTTPS? ")
+
+		case $? in
+			0) changeHTTPS=$(zenity --entry --title="" \
+				--text="Porta para o serviço HTTPS: ")
+
+				warningReturn $?
+				;;
+		esac
+
+	changeSSH=$(zenity --question --width=450 --height=120 --title="Serviço SSH" \
+		--text="Deseja alterar a porta do serviço SSH? ")
+
+		case $? in
+			0) changeSSH=$(zenity --entry --title="" \
+				--text="Porta para o serviço SSH: ")
+
+				warningReturn $?
+				;;
+		esac
+
+	echo "$changeHTTP+$changeHTTPS+$changeSSH"
+	unset changeHTTP changeHTTPS changeSSH
 }

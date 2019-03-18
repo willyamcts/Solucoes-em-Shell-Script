@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 02/06/2017;
+# Data: 06/06/2017;
 #
 # Descrição: Registra MAC do dispositivo ao selecionar o modelo, para fins de 
 #	teste de bom funcionamento do dispositivo. Funciona em dispositivos 
@@ -20,7 +20,7 @@
 #		arquivo "testadados_[DIA-MES]" do diretório atual
 
 # Adcionado: Se responder em 192.168.2.1 busca as informacoes (usuario e versao) e restaura as configuracoes para o padrão de fabrica;
-# 	- Se responder em 192.168.1.20 verifica se existe CT no equipamento, caso nao exista e criado;
+# 	- Se responder em 192.168.1.20 verifica se existe CT no equipamento, caso nao exista e criado; alem de informar a versao atual do equipamento
 
 
 
@@ -70,39 +70,51 @@ if [ $? = 0 ]; then
 
 
 
-	grep $mac $dstFile
+
+cat $dstFile | cut -f2 | grep $mac
+
 	if [ $? = 0 ]; then
 		version=$(sshUBNT 'echo $(cat /etc/version | cut -d. -f2-); ls -l /etc/persistent/ct > /dev/null || (touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot)' "ARG1")
 		out=$(echo $?)
 
 		clear && echo
+echo "MAC contem no arquivo $dstFile - \$? = $out" #TODO: Ao finalizar, remover linha;
 
-echo "MAC contem no arquivo $dstFile - \$? = $out"
-		# Report screen 192.168.1.20;
-			if [ $out = 0 ]; then
-				printf "\033[1;32m    Compliance adicionado em $DEVICE - $mac - $version\033[0m\n\n"
-			else
-				# "In log" = MAC ja esta no arquivo de log
-				printf "\033[1;31m In log: Falha ao adicionar CT em $DEVICE - $mac - $version\n\n"
-			fi
 	else
 
+	# Adicao do MAC ao arquivo de log
 		version=$(sshUBNT 'echo $(cat /etc/version | cut -d. -f2-); ls -l /etc/persistent/ct > /dev/null || (touch /etc/persistent/ct && cfgmtd -w -p /etc && reboot)' "ARG1")
 		out=$(echo $?)
 
 		clear && echo
 
-echo "Arquivo $dstFile nao contem o MAC - \$? = $out"
-		# Make report and screen 192.168.1.20;
+echo "Arquivo $dstFile nao contem o MAC - \$? = $out" #TODO: Ao finalizar, remover linha;
+		# Make report 192.168.1.20;
 			if [ $out = 0 ]; then
 				printf "$DEVICE\t$mac\n" >> "$dstFile"
-				printf "\033[1;32m    Compliance adicionado em $DEVICE - $mac - $version\033[0m\n\n"
+
+			elif [ $out = 5]; then				
+				printf "$DEVICE\t$mac\n" >> "$dstFile"
+
 			else
 				printf "$DEVICE\t$mac\n" >> "$dstFile"
-				printf "\033[1;31m Without log: Falha ao adicionar CT em $DEVICE - $mac - $version\n\n"
+				printf "\033[1;31m Nao presente no arquivo de log \n\n" #TODO: Ao finalizar, remover linha;
 			fi
 
 	fi
+
+
+	# Report screen 192.168.1.20;
+		if [ $out = 0 ]; then
+			printf "\033[1;32m    Compliance adicionado em $DEVICE - $mac - $version\033[0m\n\n"
+
+		elif [ $out = 5 ]; then
+				printf "\033[1;31m 192.168.1.20: Credenciais inválidas \033[0m\n\n"
+
+		else
+			printf "\033[1;31m     Falha ao adicionar CT em $DEVICE - $mac - $version\n\n"
+		fi
+	
 
 
 
@@ -114,7 +126,7 @@ else
 	if [ $? = 0 ]; then
 		mac=$(arp -a 192.168.2.1 | cut -d" " -f4)
 
-			### SSHAPASS PROPRIETÁRIO - Get user and reset default conf ###
+			### SSHAPASS PROPRIETÁRIO - Get user (to report) and reset default conf ###
 		info=$(sshpass -p MINHASENHA ssh -p22 -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking no' USER@192.168.2.1 'echo "$(cat /tmp/system.cfg | grep ppp.1.name= | cut -d= -f2)+$(cat /etc/version | cut -d. -f2-)" && cp /usr/etc/system.cfg /tmp/system.cfg && cfgmtd -w -p /etc && reboot') 1>&2>/dev/null
 
 		out=$(echo $?)
@@ -140,7 +152,7 @@ else
 				client=$(echo $info | cut -d+ -f1)
 				version=$(echo $info | cut -d+ -f2)
 				printf "$DEVICE\t$mac\t$client\n" >> "$dstFile"
-				clear && printf "\n\t%s - $version \n\n" "$(tail -n1 $dstFile)"
+				clear && printf "\n  %s - $version \n\n" "$(tail -n1 $dstFile)"
 			elif [ $out = 5 ]; then
 				clear && printf "\t\t\**** \033[1;31mATENÇÂO:\033[0m Usuário e/ou senha inválido(s) **** \n\n"
 			else

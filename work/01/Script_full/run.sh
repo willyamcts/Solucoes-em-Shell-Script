@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 05/06/2017;
+# Data: 19/06/2017;
 #
 # Descrição: Realiza backup de dispositivos MikroTik e  Ubiquiti; gera 
 #	relatório de dispositivos Ubiquiti contendo modelo do dispositivo, 
@@ -17,10 +17,12 @@
 #	SSH nas portas 22 e 7722.
 #
 #	* Incluso a opção de aplicar/executar comandos personalizados
-#	aos equipamentos.
+#	aos equipamentos e habilitar/desabilitar serviços como HTTPS, SSH.
 #
 # Requisitos: Zenity e SSHPass.
 
+
+source ./dialog/dialogs.lxte ./chk/handling.ch
 
 # Adicao de opcoes: handling e dialogs
 
@@ -35,12 +37,7 @@
 # 4. As funcções de backup adicionar arquivo de backup no diretorio de destino dos arquivos por padrao, sem questionar o usuario;
 # 5. O ping condicional nao exerce a funcao, pois realiza ping para rede externa;
 
-
 # Tratar caso algum metodo retorne erro para encerrar a aplicação;
-
-
-source ./dialog/dialogs.lxte ./chk/handling.ch
-
 
 checkPackages
 

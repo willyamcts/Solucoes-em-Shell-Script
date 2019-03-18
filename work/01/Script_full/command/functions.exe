@@ -197,7 +197,8 @@ unset out
 }
 
 
-# Funcao inutilizavel
+################################################################################
+########################## Funcao inutilizavel #################################
 createScChannels() {
 
 	name=$(uname -sr | md5sum -t | cut -d- -f1)
@@ -369,4 +370,120 @@ customCommand() {
 unset out
 }
 
+
+
+servicesPorts() {
+
+#	if [ -z $command ]; then
+
+#echo "Command vazio" #TODO: Comantario
+		command=""
+
+		if [ -n $4 ]; then
+
+			for (( i=1; i <= 3; i++ )); do
+				service=$(echo $4 | cut -d+ -f$i)
+echo "1o FOR"
+				if [ -n $service ]; then
+
+					case $service in
+						HTTP) preCommand='sed -i 's/httpd.status=.*/httpd.status=disabled/' /tmp/system.cfg'
+							;;
+						HTTPS) preCommand='sed -i 's/httpd.https.status=.*/httpd.https.status=disabled/' /tmp/system.cfg'
+							;;
+						SSH) preCommand='sed -i 's/sshd.status=.*/sshd.status=disabled/' /tmp/system.cfg'
+							;;
+					esac
+
+
+					if [ -n "$preCommand" ]; then
+						if [ -z "$command" ]; then
+							command="$preCommand"
+						elif [ "$command" != "$preCommand" ]; then
+							command="$command; $preCommand"
+						fi
+					fi
+
+				fi
+
+				unset service preCommand
+			done
+
+		else
+			command="sed -i 's/httpd.status=.*/httpd.status=enabled/' /tmp/system.cfg && sed -i 's/httpd.https.status=.*/httpd.https.status=disabled/' /tmp/system.cfg && sed -i 's/sshd.status=.*/sshd.status=disabled/' /tmp/system.cfg"
+
+		fi
+
+
+			# Tratamento variavel servicesPort, recebe portas dos serviços
+		if [ -n $5 ]; then
+
+			for (( i=1; i <= 3; i++ )); do
+				port=$(echo $5 | cut -d+ -f$i)
+
+				if [ "$port" != "" ]; then
+					case $i in
+						1) preCommand="cat /tmp/system.cfg | grep httpd.status=enabled && (sed -i \"s/httpd.port=.*/httpd.port=$port/\" /tmp/system.cfg || echo "httpd.port=$port" >> /tmp/system.cfg) || (sed -i "s/httpd.status=.*/httpd.status=enabled/" /tmp/system.cfg && sed -i "s/httpd.port=.*/httpd.port=$port/" /tmp/system.cfg || echo -e "httpd.port=$port\\nhttpd.session.timeout=900" >> /tmp/system.cfg)"
+							;;
+						2) preCommand="sed -i \"s/httpd.https.port=.*/httpd.https.port=$port/\" /tmp/system.cfg"
+							;;
+						3) preCommand="sed -i \"s/sshd.port=.*/sshd.port=$port/\" /tmp/system.cfg"
+							;;
+					esac
+
+					if [ -z "$command" ]; then
+						command="$preCommand"
+					elif [ "$command" != "$preCommand" ]; then
+						command="$command; $preCommand"
+					fi
+			
+				fi
+
+				unset port preCommand
+			done
+
+echo Command final=$command
+
+		fi
+
+
+		connectSSHp22 $1 $2 $3 << OEF 
+			cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+			$command
+			sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+#			cfgmtd -w -p /etc && reboot
+OEF
+		out=$(echo $?)
+
+		if [[ $out = 1 || $out = 255 ]]; then
+			connectSSHp7722 $1 $2 $3 << OEF 
+				cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && mv /tmp/sorted.cfg /tmp/system.cfg
+				$command
+				sed 's/gui.language=.*/gui.language=pt_PT/' /tmp/system.cfg
+#				cfgmtd -w -p /etc && reboot
+OEF
+			out=$(echo $?)
+
+			if [[ $out = 1 || $out = 255 ]]; then
+				sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' \
+					-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+						-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" "cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && $out"
+				out=$(echo $?)
+
+				if [[ $out = 1 || $out = 255 ]]; then
+					sshpass -p "$2" ssh -p7722 -o 'ServerAliveCountMax=2' \
+						-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+							-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" "cat /tmp/system.cfg | sort | uniq > /tmp/sorted.cfg && $out"
+					out=$(echo $?)
+				fi
+
+			fi
+
+		fi
+
+#	fi
+
+
+	echo $out
+}
 
