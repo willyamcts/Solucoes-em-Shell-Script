@@ -63,8 +63,7 @@ selectModeExecution() {
 	# Seleciona o arquivo a ser lido por funcoes posteriores;
 selectFile() {
 
-FILE=$(zenity --file-selection --title="Selecione o arquivo\
-	contendo os enderecos IP")
+FILE=$(zenity --file-selection --title="Selecione o arquivo contendo os enderecos IP")
 
 	case $? in
 		0) zenity --info --width=275 --height=130 \
