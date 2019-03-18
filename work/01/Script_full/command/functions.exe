@@ -30,8 +30,8 @@ connectSSHp7722() {
 #######################################################
 
 backupUbiquiti() {
-#	netconf.3.ip= #LINHA COM IP
-#	resolv.host.1.name= #LINHA COM NOME DO DISPOSITIVO
+#	netconf.3.ip= # IP DO DISPOSITIVO
+#	resolv.host.1.name= # NOME DO DISPOSITIVO
 
 	sshpass -p "$2" scp -P22 -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
@@ -166,16 +166,6 @@ unset run out #file
 }
 
 
-restoreBackup() {
-echo "NÃO IMPLEMENTADA"
-
-#	system identity print #ID da RB
-
-#	cat [local.arq.backup] | sshpass -p "$2" ssh -p22 $1@$3 'cat > /tmp/system.cfg; cfgmtd -w -p /etc/; reboot'
-#
-}
-
-
 
 changeChannel(){
 
@@ -247,7 +237,7 @@ echo "#!/bin/sh
 changeUserPwd() {
 
 	$(connectSSHp22 "$1" "$2" "$3" << OEF
-		(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+		(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd || exit
 
 		/bin/sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
 		/bin/sed -i '/users.1.password/d' /tmp/system.cfg
@@ -260,7 +250,7 @@ OEF
 
 	if [[ $out = 1 || $out = 255 ]]; then
 		$(connectSSHp7722 "$1" "$2" "$3" << OEF
-			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd || exit
 
 			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
 			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
@@ -276,21 +266,23 @@ OEF
 		sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' -o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
 				-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" << OEF
-			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd || exit
 
 			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
 			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
-			cfgmtd -w -p /etc/ && reboot
+#			cfgmtd -w -p /etc/ && reboot
 OEF
 
 		out=$(echo $?)
 
 
-		if [ $out != 0 ]; then
+		if [[ $out = 1 || $out = 255 ]]; then
 			sshpass -p "$2" ssh -p7722 -o 'ServerAliveCountMax=2' \
 				-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
 						-o 'StrictHostKeyChecking no' -o 'KexAlgorithms=+diffie-hellman-group1-sha1' "$1"@"$3" << OEF
-			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd
+
+			(sleep 2; echo "$5"; sleep 2; echo "$5") | passwd || exit
 
 			sed -i "s/users.1.name=.*/users.1.name=$4/" /tmp/system.cfg
 			sed -i "s/users.1.password=.*/users.1.password=\`head -n1 /etc/passwd | cut -d: -f2\`/" /tmp/system.cfg
@@ -352,9 +344,9 @@ unset out run
 
 
 
-removeLinesDuplicate() {
+customCommand() {
 
-echo "Remover linhas duplicadas - ARG1:$1, ARG2:$2"
+echo "Comandos personalizados"
 
 }
 

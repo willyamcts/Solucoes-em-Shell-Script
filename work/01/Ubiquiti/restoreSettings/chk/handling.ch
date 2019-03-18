@@ -193,7 +193,7 @@ handAddressToAccess() {
 		for ((o2="${addr[1]}"; $o2 <= ${addr[5]}; o2++)); do
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
-			
+
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 					ip="$o1.$o2.$o3.$o4"

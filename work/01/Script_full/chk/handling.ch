@@ -170,6 +170,8 @@ makeReport() {
 				;;
 			10) out='Modificação já existe no dispositivo'
 				;;
+			127) out='Necessário intervenção manual'
+				;;
 			*) out="Error cod. $2"
 				;;
 		esac	

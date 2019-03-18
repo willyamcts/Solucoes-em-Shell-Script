@@ -69,3 +69,13 @@ handAddressToAccess
 
 handFileToAccess
 
+
+
+
+
+
+
+FUNCTIONS:
+
+changeUserPwd: Não verifica se a modificação já foi aplicada anteriormente.
+massiveCompliance: Verifica se a alteração já foi aplicada anteriormente.

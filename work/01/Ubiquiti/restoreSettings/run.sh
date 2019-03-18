@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 28/04/2017;
+# Data: 09/05/2017;
 #
 # Descrição: Faz backup de equipamentos Ubiquiti com o intuito de
 #	fazer varredura na rede por dispositivos com a configuração 
@@ -12,6 +12,13 @@
 #	mesmo no diretório de backups.
 #
 # Requisitos: Zenity e SSHPass.
+
+
+# Adicao de opcoes: handling e dialogs
+
+# 17/04: Mesmo dia 15 + adaptação CT (Somente adicionar CT ou também 
+#	setar CT;
+# 19/04: Acrescentar tempo de execução no relatório;
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch

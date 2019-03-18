@@ -102,3 +102,17 @@ backupUbiquiti() {
 
 unset run out
 }
+
+
+
+
+restoreBackup() {
+echo "NÃO IMPLEMENTADA"
+
+#	system identity print #ID da RB
+
+#	cat [local.arq.backup] | sshpass -p "$2" ssh -p22 $1@$3 'cat > /tmp/system.cfg; cfgmtd -w -p /etc/; reboot'
+#
+}
+
+
