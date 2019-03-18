@@ -35,9 +35,11 @@ verifyOption() {
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
-			#createScChannels "$channels"
+#			createScChannels "$channels"
 			;;
 		"$option4") mainFunction=massiveCompliance
+#			selectOptionCT
+#			[[ $? = 1 ]] && echo "asdsdsa" #mainFunction=massiveCompliance
 			;;
 		"$option5") mainFunction=activeAddress
 			unset handData
@@ -72,33 +74,50 @@ mode2="Address list"
 		# -Se octeto nao for valido, faz chamada da funcao passada via [ARG2]
 checkOcteto() {
 
-address=$(echo $1 | cut -d, -f1)
 i=0
 
+	# Tratamento de IP nulo;
 	for (( x=1; x <= 2; x++ )); do
+		address=$(echo $1 | cut -d, -f"$x")
+
+		if [[ -z $address ]]; then
+			$2 && break
+		fi
+
+	done
+
+
+	for (( x=1; x <= 2; x++ )); do
+		address=$(echo $1 | cut -d, -f$x)
+
 
 		for (( j=1; j <= 4; i++, j++ )); do
+			octet=$(echo $address | cut -d. -f$j)
 
-			octeto=$(echo $address | cut -d. -f$j)
 
-			if [[ -n $octeto ]] || [[ $octeto -ge 0 ]] && [[ $octeto -lt 256 ]]; then
-				addr[$i]=$(echo $address | cut -d. -f$j)
+			if [[ -n $octet ]]; then
+
+				if [[ $octet -lt 0 ]]; then
+					octet=1
+				elif [[ $octet -gt 255 ]]; then
+					octet=254
+				fi
+
+				addr[$i]=$octet
+
 			else
 
-#				index=("${!addr[@]}")
-#				for x in "${index[@]::8}"; do unset "a[$x]"; done
+				index=("${!addr[@]}")
+				for y in "${index[@]::8}"; do unset "addr[$y]"; done
 
-				$2				
+				$2 && break	
 			fi
 
 		done
 
-		address=$(echo $1 | cut -d, -f2)
 	done
 
-#echo "Todos os valores de addr = ${addr[@]}" # TODO: Teste
-
-unset address i x
+unset address i x octet
 }
 
 
@@ -123,7 +142,7 @@ handData() {
 makeReport() {
 	
 	if [ -z "$1" ]; then
-		content=$(echo -e "\n ===== LOG: "$FSELECT" ===== $(date +%d.%m.%y-%H:%M) === \n\n")
+		content=$(printf "\n====== LOG: %s ===== %s ===== \n Range IP: %i.%i.%i.%i - %i.%i.%i.%i\n Tempo de execução:\n\n" "$FSELECT" "$(date +%d.%m.%y-%H:%M)" "${addr[0]}" "${addr[1]}" "${addr[2]}" "${addr[3]}" "${addr[4]}" "${addr[5]}" "${addr[6]}" "${addr[7]}")
 	else
 
 		case $2 in 
@@ -135,7 +154,7 @@ makeReport() {
 				;;
 			10) out='Modificação já existe no dispositivo'
 				;;
-			default) out="Error cod. $2"
+			*) out="Error cod. $2"
 				;;
 		esac	
 		
@@ -164,7 +183,7 @@ makeReport() {
 
 	fi
 
-echo "LINHA 133: CONTENT = $content" #TODO: teste
+#echo "LINHA 133: CONTENT = $content" #TODO: teste
 	printf "%s\n" "$content" >> $toFILE
 
 unset out content
@@ -177,10 +196,10 @@ lastHandFunction() {
 		if [ $(echo $mainFunction | grep backup) ]; then
 			return=$($mainFunction "$user" "$pass" "$1" "$dstFILES" "ARG1")
 
-echo "LINHA 168: RETURN=$return" #TODO: Teste
+#echo "LINHA 168: RETURN=$return" #TODO: Teste
 			deviceName=$(echo "$return" | cut -d+ -f1 | cut -d- -f1)
 			return=$(echo "$return" | cut -d+ -f2)
-echo "LINHA 168: RETURN=$return" #TODO: Teste
+#echo "LINHA 168: RETURN=$return" #TODO: Teste
 
 			makeReport "$1" "$return" "$deviceName"
 
@@ -222,6 +241,7 @@ unset value
 
 handAddressToAccess() {
 	makeReport
+	clear; printf "\n\n Arquivo de log:\n"
 
 	for ((o1="${addr[0]}"; $o1 <= ${addr[4]}; o1++)); do
 
@@ -234,13 +254,13 @@ handAddressToAccess() {
 					ip="$o1.$o2.$o3.$o4"
 
 					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
-					clear; printf "\n\t%s" "Verificando $ip"
+#					clear; printf "\n\t%s" "Verificando $ip"
 
-					ping -s1 -c2 $ip 1> /dev/null 2> /dev/null 
+					ping -s1 -c2 $ip 1>&2>/dev/null 
 
 					if (( $? == 0 )); then
-						clear; printf "\n\t%s" "Aplicando a $ip"
 						lastHandFunction "$ip"
+						tail -n1 $toFILE
 					fi
 
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'

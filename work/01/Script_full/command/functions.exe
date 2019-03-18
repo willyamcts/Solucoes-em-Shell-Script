@@ -70,14 +70,14 @@ unset run out
 backupMikroTik() {
 #Necessario alterar handAddressToAccess - condicional proprietario
 
-	$(connectSSHp7722 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; system backup save; :foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".rsc"]]!="nil") do={/file remove $i}}; /export file=[/system identity get name]')
+	$(connectSSHp7722 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; /system backup save; :foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".rsc"]]!="nil") do={/file remove $i}}; /export file=[/system identity get name]' 1>&2>/dev/null)
 
 	out=$(echo $?)
 
 
 #	if [ $out = 1 ] || [ $out = 255 ]; then
 
-#		$(connectSSHp22 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; system backup save')
+#		$(connectSSHp22 "$1" "$2" "$3" ':foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] ".backup"]]!="nil") do={/file remove $i}}; system backup save' 1>&2>/dev/null)
 
 #		out=$(echo $?)
 
@@ -87,10 +87,10 @@ backupMikroTik() {
 	if [ $out = 0 ]; then
 		mkdir /tmp/"$3" 1>&2>/dev/null
 
-		sshpass -p "$2" scp -P7722 -r -o 'ServerAliveCountMax=2' \
+		$(sshpass -p "$2" scp -P7722 -r -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' \
-				-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/ 1>&2>/dev/null
+				-o 'StrictHostKeyChecking no' $1@$3:/ /tmp/"$3"/ 1>&2>/dev/null) 
 
 		out=$(echo $?)
 
@@ -112,10 +112,15 @@ backupMikroTik() {
 			| awk -F-20 '{print $1}' | \
 				awk '{print $1}')
 
-		mkdir "$4/$run" 2>/dev/null
+		mkdir "$4/$run" 1>&2>/dev/null
 
 		# Move os arquivo ".backup" e ".rsc" para um subdiretorio nomeado $run no diretorio definido;
-		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/$run/" || mv "$(find /tmp/"$3/" -name "*.backup")" /tmp/"$3"/*.rsc "$4/$run/") && rm -rf /tmp/"$3/"
+#		(mv /tmp/"$3"/*.backup /tmp/"$3"/*.rsc "$4/$run/" && rm -rf /tmp/"$3/" &) || (mv "$(find /tmp/"$3/" -name "*.backup")" "$(find /tmp/$3/ -name "*.rsc")" "$4/$run/" && rm -rf /tmp/"$3/" &)
+
+
+#mv /tmp/"$3"/*.rsc "$4/$run/" || mv "$(find /tmp/"$3/" -name "*.rsc")" "$4/$run/"
+
+
 
 # Tratar erro caso arquivos não seja movidos para o dir definido
 

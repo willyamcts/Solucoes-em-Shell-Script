@@ -129,7 +129,7 @@ dataAccess() {
 
 
 	# Recebe endereco IP inicial e final
-function addressEntry {
+addressEntry() {
 
 	modeFunction=handAddressToAccess
 
@@ -142,6 +142,10 @@ IP=$(zenity --forms --title="Defina a range de endereços" --width=320 --height=
 
 	checkOcteto "$IP" "addressEntry"
 }
+
+
+#########################################################
+############## Extras - Novas funcoes >>> ###############
 
 
 infoChangeChannels(){
@@ -160,5 +164,15 @@ entryChannels() {
 		--text="Entre com o canal desejado, caso seja mais de um separe-os por vírgula, sem espaçamentos: "
 
 	warningReturn $?
+
+}
+
+
+selectOptionCT() {
+	zenity --question --width=450 --height=120 --title="WARNING!" \
+		--text="Além de liberar Compliance Teste, deseja usá-lo? \
+			\n\n Será habilitado o DFS e selecionado Compliance Test como seu país."
+
+#	echo $?
 
 }
