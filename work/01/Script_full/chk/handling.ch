@@ -1,6 +1,23 @@
-source ./command/functions.exe
+source ./command/functions.exe 
+
 
 # Contem funcoes para manipular informacoes;
+
+
+checkPackages() {
+
+	(pacman -Ss zenity || dpkg --get-selections | grep zenity) > /dev/null
+
+	if [[ $? == 0 ]]; then
+		(pacman -Ss sshpass || dpkg --get-selections | grep sshpass) > /dev/null
+
+	else
+		clear
+		printf "É necessario a instalação de pacotes...\n\n\t Iniciando a instalação...\n\n"
+		sudo pacman -Sy sshpass zenity || sudo apt-get install sshpass zenity
+	fi
+
+}
 
 
 
@@ -18,6 +35,7 @@ verifyOption() {
 		"$option3") mainFunction=changeChannel
 			infoChangeChannels
 			channels=$(entryChannels "ARG1")
+			#createScChannels "$channels"
 			;;
 		"$option4") mainFunction=massiveCompliance
 			;;
@@ -111,7 +129,7 @@ makeReport() {
 				;;
 			10) out='Modificação já existe no dispositivo'
 				;;
-			default) out="Error code $2"
+			default) out="Error cod. $2"
 				;;
 		esac	
 		
@@ -134,14 +152,14 @@ makeReport() {
 					fi
 					;;
 
-			*) content=$(printf "%s\t -- %s" "$1" "$out")
+			*) content=$(printf "%s\t%s" "$1" "$out")
 					;;
 		esac
 
 	fi
 
 echo "LINHA 133: CONTENT = $content" #TODO: teste
-	printf "%s" "$content" >> $toFILE
+	printf "%s\n" "$content" >> $toFILE
 
 unset out content
 }
@@ -204,7 +222,7 @@ handAddressToAccess() {
 		for ((o2="${addr[1]}"; $o2 <= ${addr[5]}; o2++)); do
 
 			for ((o3="${addr[2]}"; $o3 <= ${addr[6]}; o3++)); do
-			
+
 				for ((o4="${addr[3]}"; $o4 <= ${addr[7]}; o4++)); do
 
 					ip="$o1.$o2.$o3.$o4"
@@ -213,6 +231,8 @@ handAddressToAccess() {
 
 					if (( $? == 0 )); then
 						lastHandFunction "$ip"
+					else # TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
+						clear; printf "\n\t%s" "Verificando $ip" 
 					fi
 
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
