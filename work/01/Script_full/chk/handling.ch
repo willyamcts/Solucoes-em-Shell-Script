@@ -242,7 +242,6 @@ handAddressToAccess() {
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
 #					xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
 
-
 				done
 			done
 		done

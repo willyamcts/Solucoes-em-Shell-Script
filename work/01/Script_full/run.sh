@@ -3,7 +3,7 @@
 ##
 # Autor: Willyam Castro;
 #
-# Data: 18/04/2017 - 18:00;
+# Data: 18/04/2017 - 19:30;
 #
 # Descrição: Realiza backup de dispositivos Ubiquiti; gera relatório de 
 #	dispositivos Ubiquiti contendo modelo do dispositivo, MAC, usuário
@@ -19,6 +19,8 @@
 
 
 # Adicao de opcoes: handling e dialogs
+
+# 19/04: Acrescentar tempo de execução no relatório;
 
 
 source ./dialog/dialogs.lxte ./chk/handling.ch
