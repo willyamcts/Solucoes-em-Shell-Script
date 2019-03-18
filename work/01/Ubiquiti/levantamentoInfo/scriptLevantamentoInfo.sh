@@ -6,11 +6,12 @@
 # Data: 12/2016;
 #
 #	Verifica IPs ativos na rede e adiciona a um arquivo na
-#	pasta temporaria; realizado leitura do arquivo, fazendo chamada
-#	da funcao comandoUpdate; Apos update faz a verificacao de IPs com versao
-#	do firmware, equipamentos com versao fora da atual sao reiniciados e apos
-#	2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
+#	pasta temporaria, posteriormente realiza a leitura do arquivo, fazendo 
+#	chamada da funcao comandoUpdate; Apos update faz a verificacao de IPs com 
+#	versao do firmware, equipamentos com versao fora da atual sao reiniciados 
+#	e apos 2min e aplicado novamente commandUpdate em cima desses IPs. Por fim
 #	gera um relatorio simples de execucao presente em ./ouput.txt;
+#	Solicita 2 credenciais, caso tenha mais de uma, se não, utilize a mesma;
 
 
 # TODO: Nao rerifica se arquivos de execucao anteriores existem
@@ -84,7 +85,7 @@ mainBlock(){
 # Verifica enderecos ativos, manipulando 3o octeto;
 verifyActiveAddress() {
 
-	until [ $oct3 -gt $oct3F ]; do
+#	until [ $oct3 -gt $oct3F ]; do
 echo EM UNTIL
 		if [ -e $arcAddress ]; then
 			rm $arcAddress
@@ -110,9 +111,9 @@ echo EM UNTIL
 		# time, caso contrario executa remocao antes da condicional;
 		sleep 15
 
-		((oct3++))
+#		((oct3++))
 
-	done
+#	done
 }
 
 
@@ -199,9 +200,9 @@ excluirArquivos(){
 	fi
 
 	# Remove script criado;
-	if [ -e /tmp/.script.sh ]; then
-		rm /tmp/.script.sh
-	fi
+#	if [ -e /tmp/.script.sh ]; then
+#		rm /tmp/.script.sh
+#	fi
 }
 
 
@@ -213,11 +214,15 @@ verifyVersion(){
 	clear; echo "		Verificando versão dos equipamentos...."
 	echo -e "\n\n	$ip"
 
-	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
+	version=`sshpass -p $PASSWORD ssh -p $PORTSSH -o 'ServerAliveCountMax=2' \
+			-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+				-o 'StrictHostKeyChecking no' $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
 	out=$?
 
 	if [[ $out = 1 || $out = 255 ]]; then
-		version=`sshpass -p $PASSWORD ssh -p $PORTSSH2 -o "ConnectTimeout=5" -o "StrictHostKeyChecking no" $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
+		version=`sshpass -p $PASSWORD ssh -p $PORTSSH2 -o 'ServerAliveCountMax=2' \
+			-o 'ServerAliveInterval=10' -o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
+				-o 'StrictHostKeyChecking no' $USER@$ip 'cat /etc/version | cut -d"v" -f2'`
 		out=$?
 	fi
 
@@ -312,20 +317,20 @@ echo " "; echo "Informe a senha de acesso para $USER: "
 read -s PASSWORD; echo " "
 
 
-#echo "Informe um segundo usuario padrao de acesso aos equipamentos: "
-#read USER2
+echo "Informe um segundo usuario padrao de acesso aos equipamentos: "
+read USER2
 
-#echo " "; echo "Informe a senha de acesso para $USER2: "
-#read -s PASSWORD2; echo " "
+echo " "; echo "Informe a senha de acesso para $USER2: "
+read -s PASSWORD2; echo " "
 
 
 echo " "; echo "Informe o IP inicial: (será considerado /16) "
 #read ip
-ip="10.76.176.10"
+ip="10.79.139.10"
 
 echo " "; echo "Informe o IP final: (será considerado /16) "
 #read ipFinal
-ipFinal="10.76.231.250"
+ipFinal="10.79.215.250"
 
 echo " "; echo "Porta SSH: "
 #read PORTSSH

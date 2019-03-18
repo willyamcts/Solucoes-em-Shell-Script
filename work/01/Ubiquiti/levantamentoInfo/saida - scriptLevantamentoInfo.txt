@@ -1,96 +1,138 @@
 			REPORT FINAL:	
-		Varredura de 10.76.47.1 a 10.76.47.254
+		Varredura de 10.76.42.1 a 10.76.43.254
+	0 dispositivos verificados, 211 estão desatualizados	
+ 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:00:46
+
+ ==================== 16:34 - 22/11/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.42.1 a 10.76.43.254
+	0 dispositivos verificados, 211 estão desatualizados	
+ 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:00:32
+
+ ==================== 16:36 - 22/11/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.42.1 a 10.76.43.254
+	0 dispositivos verificados, 211 estão desatualizados	
+ 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:00:34
+
+ ==================== 16:38 - 22/11/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.42.1 a 10.76.43.254
+	0 dispositivos verificados, 211 estão desatualizados	
+ 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:06:04
+
+ ==================== 16:44 - 22/11/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.42.1 a 10.76.43.254
 	0 dispositivos verificados, 0 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:49
+ Tempo gasto: 00:00:29
 
- ==================== 14:35 - 16/05/2017 ==================
+ ==================== 16:46 - 22/11/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.76.47.1 a 10.76.47.254
+		Varredura de 10.76.42.1 a 10.76.43.254
 	0 dispositivos verificados, 0 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:31
+ Tempo gasto: 00:00:40
 
- ==================== 14:37 - 16/05/2017 ==================
+ ==================== 16:48 - 22/11/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.76.47.1 a 10.76.47.254
+		Varredura de 10.76.42.1 a 10.76.43.254
 	0 dispositivos verificados, 0 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:58
+ Tempo gasto: 00:00:28
 
- ==================== 14:39 - 16/05/2017 ==================
+ ==================== 16:51 - 22/11/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.76.47.1 a 10.76.47.254
+		Varredura de 10.76.42.1 a 10.76.43.254
+	34 dispositivos verificados, 34 estão desatualizados	
+ 	34 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:07:26
+
+ ==================== 17:28 - 22/11/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.42.1 a 10.76.43.254
+	34 dispositivos verificados, 68 estão desatualizados	
+ 	34 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 00:02:25
+
+ ==================== 12:02 - 01/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.76.3.1 a 10.79.255.254
+	401 dispositivos verificados, 274 estão desatualizados	
+ 	401 dispositivos verificados, 6 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:51:26
+
+ ==================== 12:57 - 01/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.79.1.1 a 10.79.255.254
+	104 dispositivos verificados, 62 estão desatualizados	
+ 	104 dispositivos verificados, 10 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:26:50
+
+ ==================== 04:35 - 02/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.79.1.1 a 10.79.10.254
+	14 dispositivos verificados, 1 estão desatualizados	
+ 	14 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:01:40
+
+ ==================== 04:39 - 02/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.79.1.1 a 10.79.10.254
+	29 dispositivos verificados, 3 estão desatualizados	
+ 	29 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:03:08
+
+ ==================== 04:44 - 02/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.79.1.1 a 10.79.10.254
+	0 dispositivos verificados, 5 estão desatualizados	
+ 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:00:56
+
+ ==================== 04:48 - 02/12/2016 ==================
+			REPORT FINAL:	
+		Varredura de 10.79.1.1 a 10.79.10.254
 	0 dispositivos verificados, 0 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:26
+ Tempo gasto: 21:00:55
 
- ==================== 15:12 - 16/05/2017 ==================
+ ==================== 04:53 - 02/12/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 205 estão desatualizados	
- 	0 dispositivos verificados, 7 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:03:32
-
- ==================== 15:17 - 16/05/2017 ==================
-			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 12 estão desatualizados	
+		Varredura de 10.79.1.1 a 10.79.10.254
+	0 dispositivos verificados, 4 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:03:32
+ Tempo gasto: 21:01:14
 
- ==================== 15:59 - 16/05/2017 ==================
+ ==================== 04:55 - 02/12/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 36 estão desatualizados	
+		Varredura de 10.79.1.1 a 10.79.10.254
+	0 dispositivos verificados, 4 estão desatualizados	
  	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
+ Tempo gasto: 21:01:15
 
- ==================== 16:02 - 16/05/2017 ==================
+ ==================== 04:57 - 02/12/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 12 estão desatualizados	
- 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
+		Varredura de 10.79.1.1 a 10.79.10.254
+	29 dispositivos verificados, 2 estão desatualizados	
+ 	29 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 21:03:57
 
- ==================== 16:03 - 16/05/2017 ==================
+ ==================== 06:28 - 02/12/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 24 estão desatualizados	
- 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
+		Varredura de 10.76.1.1 a 10.76.254.254
+	1669 dispositivos verificados, 1407 estão desatualizados	
+ 	1669 dispositivos verificados, 19 estão com usuario e/ou senha incorreta	
+ Tempo gasto: 03:12:10
 
- ==================== 16:09 - 16/05/2017 ==================
+ ==================== 20:31 - 02/12/2016 ==================
 			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 12 estão desatualizados	
- 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
-
- ==================== 16:10 - 16/05/2017 ==================
-			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 24 estão desatualizados	
- 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
-
- ==================== 16:13 - 16/05/2017 ==================
-			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.14.254
-	0 dispositivos verificados, 12 estão desatualizados	
- 	0 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:43
-
- ==================== 16:19 - 16/05/2017 ==================
-			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.15.254
-	456 dispositivos verificados, 12 estão desatualizados	
+		Varredura de 10.79.1.1 a 10.79.254.254
+	456 dispositivos verificados, 280 estão desatualizados	
  	456 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:42
-
- ==================== 16:20 - 16/05/2017 ==================
-			REPORT FINAL:	
-		Varredura de 10.79.14.1 a 10.79.15.254
-	35 dispositivos verificados, 11 estão desatualizados	
- 	35 dispositivos verificados, 0 estão com usuario e/ou senha incorreta	
- Tempo gasto: 00:00:44
+ Tempo gasto: 01:54:15

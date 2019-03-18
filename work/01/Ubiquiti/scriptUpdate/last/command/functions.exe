@@ -15,7 +15,7 @@ connectSSHp22() {
 	sshpass -p "$2" ssh -p22 -o 'ServerAliveCountMax=2' \
 		-o 'ServerAliveInterval=10' \
 			-o 'ConnectTimeout=10' -o 'UserKnownHostsFile=/dev/null' \
-				-o 'StrictHostKeyChecking no' $1@$3 $4 1>&2>/dev/null
+				-o 'StrictHostKeyChecking no' $1@$3 $4 #1>&2>/dev/null
 }
 
 # Padrao conexao SSH na porta 7722
@@ -176,7 +176,8 @@ updateUbiquiti() {
 
 #	out=$(echo $?)
 
-	if [[ $out = 1 || $out = 255 ]]; then
+#	if [[ $out = 1 || $out = 255 ]]; then #EMPRO; Comentado
+	if [[ $? = 1 || $? = 255 ]]; then
 		cat /tmp/.script.sh | $(connectSSHp7722 "$1" "$2" "$3" \
 			'cat > /tmp/script.sh; chmod +x /tmp/script.sh; /tmp/script.sh')
 
@@ -216,7 +217,7 @@ echo "#!/bin/sh
 			esac
 
 			cd /tmp
-			wget -c -O firmware.bin "'$URL'" && echo \"10\" #&& ubntbox fwupdate.real -m /tmp/firmware.bin 
+			wget -c -O firmware.bin "'$URL'" && ubntbox fwupdate.real -m /tmp/firmware.bin 
 			
 
 #		elif [ \$build != $2 ]; then
@@ -299,12 +300,16 @@ echo "#!/bin/sh
 
 checkVersion() {
 
-	$(connectSSHp22 "$1" "$2" "$3" \
-		'[ $(cat /etc/version | cut -d"v" -f2-) = $1 ] && exit 0')
-
+	$(connectSSHp22 "$1" "$2" "$3" "[ \$(cat /etc/version | cut -d"v" -f2-) = "$4" ] && exit 0 || exit 13")
 	out=$(echo $?)
 
-	echo out
+	if [[ $out = 1 || $out = 255 ]]; then
+		$(connectSSHp7722 "$1" "$2" "$3" "[ \$(cat /etc/version | cut -d"v" -f2-) = "$4" ] && exit 0 || exit 13")
+		out=$(echo $?)
+
+	fi
+
+	echo $out
 	unset out
 }
 

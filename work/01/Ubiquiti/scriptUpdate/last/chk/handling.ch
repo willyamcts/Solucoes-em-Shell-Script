@@ -157,6 +157,8 @@ makeReport() {
 				;;
 			12) out='Dispositivo reiniciado'
 				;;
+			13) out='Dispositivo não atualizado'
+				;;
 			*) out="Error cod. $2"
 				;;
 		esac	
@@ -196,15 +198,23 @@ unset out content
 lastHandFunction() {
 
 #		if [[ $(echo $mainFunction | grep update) && $2 = 1 ]]; then
-		if [ $2 = 1 ]; then
-echo LASNTHAND 2
-			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
-#			makeReport "$1" "$return" 1
-			sed -i "s/$1.*/$1\t$return/" $toFILE
+		if [ -z $2 ]; then
+
+			echo "NORMAL" #TODO
+
+			echo "$1" >> /tmp/list.txt #EMPRO
+#			return=$($mainFunction "$user" "$pass" "$1" "ARG1") #EMPRO: Comentado
+			$($mainFunction "$user" "$pass" "$1")
+#			makeReport "$1" "$return" #EMPRO: Comentado
 
 		else
-			return=$($mainFunction "$user" "$pass" "$1" "ARG1")
-			makeReport "$1" "$return"
+			echo "LASTHAND 2" #TODO
+			return=$($mainFunction "$user" "$pass" "$1" "$buildM" "ARG1")
+			echo "RETORNO de LH2: $return" #TODO
+			makeReport "$1" "$return" "1" #EMPRO: Descomentado
+
+#			sed ':a;$!{N;ba;};s/\(.*\)$1.*/$1\t$return/' $toFILE #EMPRO: Comentado
+#			sed -i "s/$1.*/$1\t$return/" $toFILE
 		fi
 
 unset value
@@ -213,8 +223,10 @@ unset value
 
 
 handAddressToAccess() {
+#	clear #TODO: Descomentar
 	makeReport
-	startLines=$(wc -l "$toFILE" | cut -d" " -f1)
+#	startLines=$(wc -l "$toFILE" | cut -d" " -f1) #EMPRO: Comentado
+startLines=$(wc -l /tmp/list.txt | cut -d" " -f1)
 
 	for ((o1="${addr[0]}"; $o1 <= ${addr[4]}; o1++)); do
 
@@ -227,15 +239,15 @@ handAddressToAccess() {
 					ip="$o1.$o2.$o3.$o4"
 
 					# TODO: Apresentando que esta verificando, caso contrario a tela fica presa;
-#					clear; printf "\n\t%s" "Verificando $ip"
+					clear; printf "\n\t%s" "Verificando $ip"
 
 					ping -s1 -c2 $ip 1>&2>/dev/null 
 
 					if (( $? == 0 )); then
 						lastHandFunction "$ip"
-						tail -n1 $toFILE
+#						tail -n1 $toFILE #EMPRO: Comentado
 					fi
-						
+
 #					xfce4-terminal -x bash -c 'echo "$IP"; sleep 5'
 #					xfce4-terminal -x bash -c '$mainFunction "$pass" "$user" "$ip"; sleep 5'
 
@@ -259,25 +271,33 @@ handFileToAccess() {
 
 
 checkUbiquiti() {
-	mainFunction=$(checkVersion "$buildM")
+	mainFunction=checkVersion
 
-	finishLines=$(wc -l "$toFILE" | cut -d" " -f1)
+#	finishLines=$(wc -l "$toFILE" | cut -d" " -f1)
+#	lines=$((finishLines-startLines))
+#	lines=$((lines-$(cat "$toFILE" | tail -n $lines | grep "atualizado" | wc -l | cut -d" " -f1)))
+
+
+	finishLines=$(wc -l /tmp/list.txt | cut -d" " -f1)
 	lines=$((finishLines-startLines))
-	lines=$((lines-$(cat "$toFILE" | tail -n $lines | grep "atualizado" | wc -l | cut -d" " -f1)))
 
-echo $startLines $finishLines $lines
+	echo $startLines $finishLines $lines #TODO
 	unset startLines finishLines
 
-	if [ $lines -gt 0 ]; then
-echo INFOR
-#cat $toFILE | tail -n $lines | grep -v "atualizado"
-		for ip in $(cat "$toFILE" | tail -n "$lines" | grep -v "atualizado"); do
-echo FOR=$ip
-			lastHandFunction "$ip" "1"
+#	if [ $lines -gt 0 ]; then
+
+#cat $toFILE | tail -n $lines | grep -v "atualizado" #TODO
+#		for ip in $(cat "$toFILE" | tail -n "$lines" | grep -v "atualizado"); do #EMPRO: Comentado
+#echo FOR=$ip #TODO
+
+		for ip in $(cat /tmp/list.txt | tail -n "$lines"); do
+			lastHandFunction "$ip" 1
 		done
-else
-echo "NAO"
-	fi
+
+
+#else #TODO
+#echo "NAO" #TODO
+#	fi
 
 
 }
