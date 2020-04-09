@@ -5,3 +5,5 @@
 [crypt_decrypt_multiples_files.sh](https://github.com/willyamcts/solucoes-em-shell-script/blob/master/crypt_decrypt_multiples_files.sh): gera hash MD5 de arquivo, criptografa (.zip) e descriptografa arquivos usando chave AES.
 
 [crypt_decrypt_txt.sh](https://github.com/willyamcts/solucoes-em-shell-script/blob/master/crypt_decrypt_txt.sh): criptografa somente arquivos TXT utilizando chave RSA.
+
+[Instalação OCS Inventory](https://github.com/willyamcts/OCS-Inventory-server-installer-sh): instalação e configuração (básica) automática do serviço de inventário *open source* OCS Inventory.
